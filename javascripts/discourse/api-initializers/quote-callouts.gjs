@@ -3,7 +3,8 @@ import { iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { capitalizeFirstLetter, hexToRGBA } from "../lib/utils";
 
-const CALLOUT_REGEX = /^\[!(?<callout>[^\]]+)\]\s*?(?<title>[^\n\r]*)?/;
+const CALLOUT_REGEX =
+  /^\[!(?<callout>[^\]]+)\](?<fold>[+-])?\s*?(?<title>[^\n\r]*)?/;
 
 class QuoteCallouts {
   constructor(owner, api) {
@@ -14,6 +15,7 @@ class QuoteCallouts {
     api.decorateCookedElement((element) => {
       element.querySelectorAll("blockquote").forEach((blockquote) => {
         this.processBlockquotes(blockquote);
+        this.bindFoldEvents(blockquote);
       });
     });
   }
@@ -70,21 +72,87 @@ class QuoteCallouts {
       setting?.title ||
       capitalizeFirstLetter(calloutType);
 
-    const titleRow = this.createTitleRow(calloutIcon, title);
+    const fold = match.groups?.fold;
+    const titleRow = this.createTitleRow(calloutIcon, title, fold);
 
     blockquote.prepend(titleRow, firstParagraph);
     blockquote.classList.add("callout", `callout-${calloutType}`);
+
     blockquote.style.backgroundColor = hexToRGBA(
       setting?.color || settings.callout_fallback_color,
       settings.callout_background_opacity / 100
     );
 
     this.cleanupParagraph(firstParagraph);
+
+    const contents = Array.from(blockquote.childNodes).filter(
+      (node) =>
+        node.nodeType === Node.ELEMENT_NODE && !node.isSameNode(titleRow)
+    );
+
+    if (contents.length) {
+      const contentContainer = document.createElement("div");
+      contentContainer.className = "callout-content";
+      contentContainer.append(...contents);
+
+      blockquote.appendChild(contentContainer);
+
+      if (fold) {
+        blockquote.classList.add("is-collapsible");
+
+        if (fold === "-") {
+          blockquote.classList.add("is-collapsed");
+        }
+      }
+    }
   }
 
-  createTitleRow(icon, title) {
+  bindFoldEvents(blockquote) {
+    if (!blockquote.classList.contains("is-collapsible")) {
+      return;
+    }
+
+    const titleRow = blockquote.querySelector(".callout-title");
+    const content = blockquote.querySelector(".callout-content");
+
+    if (!titleRow || !content) {
+      return;
+    }
+
+    titleRow.addEventListener("click", () => {
+      const isCollapsing = !blockquote.classList.contains("is-collapsed");
+      const foldSpan = titleRow.querySelector(".callout-fold");
+
+      content.removeAttribute("style");
+      content.style.overflowY = "clip";
+      content.style.height = content.scrollHeight + "px";
+
+      if (isCollapsing) {
+        content.style.height = content.scrollHeight + "px";
+        content.offsetHeight; // reflow
+        content.style.height = "0px";
+      }
+
+      blockquote.classList.toggle("is-collapsed");
+      if (foldSpan) {
+        foldSpan.classList.toggle("is-collapsed");
+      }
+
+      content.addEventListener(
+        "transitionend",
+        () => {
+          content.style = blockquote.classList.contains("is-collapsed")
+            ? "display: none"
+            : "";
+        },
+        { once: true }
+      );
+    });
+  }
+
+  createTitleRow(icon, title, fold) {
     const titleRow = document.createElement("div");
-    titleRow.className = "callout-title";
+    titleRow.classList.add("callout-title");
 
     if (icon) {
       const iconSpan = document.createElement("span");
@@ -97,6 +165,17 @@ class QuoteCallouts {
       const titleSpan = document.createElement("span");
       titleSpan.textContent = title;
       titleRow.appendChild(titleSpan);
+    }
+
+    if (fold) {
+      const foldSpan = document.createElement("span");
+      foldSpan.classList.add("callout-fold");
+      if (fold === "-") {
+        foldSpan.classList.add("is-collapsed");
+      }
+
+      foldSpan.innerHTML = iconHTML("chevron-down");
+      titleRow.appendChild(foldSpan);
     }
 
     return titleRow;
