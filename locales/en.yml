@@ -1,5 +1,84 @@
 en:
   theme_metadata:
-    description: ''
+    description: ""
     settings:
-      example_setting: A description of a setting.
+      callouts:
+        description: |
+          Define the callouts.
+          <br><br><br>
+          <h2>Default fallback</h2>
+          Define the default callout type, icon, and color to use when the specified type is not found.
+        schema:
+          properties:
+            type:
+              label: Type
+              description: The type of the callout.
+            alias:
+              label: Alias
+              description: >
+                The aliases for the callout, separated by <tt>|</tt>.<br>
+                E.g.: <tt>cite|quote</tt>
+            icon:
+              label: Icon
+              description: >
+                The <a href="https://fontawesome.com/search?ic=free" target="_blank" title="Search a fontawesome icon">fontawesome</a> icon for the callout.<br>
+                You might need to add it to <tt>svg_icons</tt> setting if it's not available in the default subset.
+            title:
+              label: Title
+              description: >
+                The title for the callout.<br>
+                If no title is provided in the callout, this setting will be used.<br>
+                Note: if both are empty, the title will be the callout type.
+            color:
+              label: Color
+              description: >
+                The color for the callout.<br>
+                This will be used for the background, title, and icon.<br>
+                Note: Use only hexadecimal color codes, e.g. <tt>#027aff</tt>.
+            border_width:
+              label: Border width
+              description: The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-width" target="_blank" title="'border-width' CSS Documentation">border width</a> for the callout.
+            border_style:
+              label: Border style
+              description: The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-style" target="_blank" title="'border-style' CSS Documentation">border style</a> for the callout.
+            border_color:
+              label: Border color
+              description: >
+                The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-color" target="_blank" title="'border-color' CSS Documentation">border color</a> for the callout.<br>
+                Important: if you're using a CSS functions to prodive an alpha value, such as <tt>rgba</tt>, make sure to not use spaces between the values, e.g. <tt>rgba(145,145,145,0.1)</tt>.
+      callout_fallback_type:
+        description: The default callout type to use when the specified type is not found.
+      callout_fallback_icon:
+        description: The default icon to use when the specified type is not found.
+      callout_fallback_color:
+        description: |
+          The default color to use when the specified type is not found.<br>
+          This will be used for the background, title, and icon.<br>
+          Note: Use only hexadecimal color codes, e.g. <tt>#027aff</tt>.
+          <br><br><br>
+          <h2>Global Styling</h2>
+          Customize the default look of the callouts.<br>
+          The color and border properties can be overridden per callout type.
+
+      callout_background_opacity:
+        description: The global background opacity for the callout (1 to 100).
+      callout_border_width:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-width" target="_blank" title="'border-width' CSS Documentation">border width</a> for the callout.
+      callout_border_style:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-style" target="_blank" title="'border-style' CSS Documentation">border style</a> for the callout.
+      callout_border_color:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-color" target="_blank" title="'border-color' CSS Documentation">border color</a> for the callout.
+      callout_border_radius:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius" target="_blank" title="'border-radius' CSS Documentation">border radius</a> for the callout.
+      callout_padding:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/padding" target="_blank" title="'padding' CSS Documentation">padding</a> for the callout.
+      callout_title_font_size:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/font-size" target="_blank" title="'font-size' CSS Documentation">font size</a> for the callout title.
+      callout_title_font_weight:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight" target="_blank" title="'font-weight' CSS Documentation">font weight</a> for the callout title.
+      callout_title_gap:
+        description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/gap" target="_blank" title="'gap' CSS Documentation">gap</a> betweent the callout icon and title.
+
+      svg_icons:
+        description: |
+          Adds your icons to the Discourse SVG icons subset.

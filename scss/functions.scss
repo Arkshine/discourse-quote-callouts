@@ -1,0 +1,89 @@
+/**
+ * Trims whitespace from the beginning and end of a string.
+ *
+ * @param {String} $string - The string to trim.
+ * @return {String} - The trimmed string.
+ */
+@function str-trim($string) {
+  $string: unquote($string);
+
+  @while str-length($string) > 0 and str-index(" ", str-slice($string, 1, 1)) {
+    $string: str-slice($string, 2);
+  }
+
+  @while str-length($string) > 0 and str-index(" ", str-slice($string, -1)) {
+    $string: str-slice($string, 1, -2);
+  }
+
+  @return $string;
+}
+
+/**
+ * Splits a string into a list of substrings using a separator.
+ *
+ * @param {String} $string - The string to split.
+ * @param {String} $separator - The separator string.
+ * @return {List} - The list of substrings.
+ */
+@function str-split($string, $separator) {
+  $result: ();
+  $start: 1;
+  $index: str-index($string, $separator);
+
+  @while $index != null {
+    $item: str-slice($string, $start, $index - 1);
+    $result: append($result, $item);
+    $start: $index + str-length($separator);
+    $index: str-index(str-slice($string, $start), $separator);
+    $index: if($index != null, $start + $index - 1, null);
+  }
+
+  $last_item: str-slice($string, $start);
+
+  @if $last_item != "" {
+    $result: append($result, $last_item);
+  }
+
+  @return $result;
+}
+
+/**
+ * Parses a string of ruby-like key-value pairs into a map.
+ * Format: [{"key1"=>"value1", "key2"=>"value2"}, {"key1"=>"value1","key2"=>"value2"}]
+ *
+ * @param {String} $string - The string of key-value pairs.
+ * @return {Map} - The map of key-value pairs.
+ */
+@function parseObjectSettings($string) {
+  $string: str-slice($string, 2, -2);
+  $items: str-split($string, "}, {");
+
+  $parsedItems: ();
+
+  @each $item in $items {
+    $item: str-replace($item, "{", "");
+    $item: str-replace($item, "}", "");
+    $item: str-trim($item);
+
+    $pairs: str-split($item, ", ");
+    $map: ();
+
+    @each $pair in $pairs {
+      $pairSplit: str-split($pair, "=>");
+
+      $key: str-slice(str-trim(nth($pairSplit, 1)), 2, -2);
+      $value: str-slice(str-trim(nth($pairSplit, 2)), 2, -2);
+
+      $map: map-merge(
+        $map,
+        (
+          quote($key): quote($value),
+        )
+      );
+    }
+
+    $parsedItems: append($parsedItems, $map);
+  }
+
+  @return $parsedItems;
+}

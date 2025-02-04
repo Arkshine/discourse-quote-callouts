@@ -1,2 +1,211 @@
-example_setting:
-  default: true
+callouts:
+  type: objects
+  default:
+    [
+      {
+        type: "note",
+        alias: "",
+        icon: "far-pen-to-square",
+        title: "",
+        color: "#086ddd",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "abstract",
+        alias: "summary|tldr",
+        icon: "far-clipboard",
+        title: "",
+        color: "#00bfbc",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "info",
+        alias: "",
+        icon: "far-lightbulb",
+        title: "",
+        color: "#027aff",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "todo",
+        alias: "",
+        icon: "far-circle-check",
+        title: "",
+        color: "#027aff",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "tip",
+        alias: "hint|important",
+        icon: "fire-flame-curved",
+        title: "",
+        color: "#00bfbc",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "success",
+        alias: "check|done",
+        icon: "check",
+        title: "",
+        color: "#44cf6e",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "question",
+        alias: "help|faq",
+        icon: "far-circle-question",
+        title: "",
+        color: "#ec7500",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "warning",
+        alias: "caution|attention",
+        icon: "triangle-exclamation",
+        title: "",
+        color: "#ec7500",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "failure",
+        alias: "fail|missing",
+        icon: "xmark",
+        title: "",
+        color: "#e93147",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "danger",
+        alias: "error",
+        icon: "bolt",
+        title: "",
+        color: "#e93147",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "bug",
+        alias: "",
+        icon: "bug",
+        title: "",
+        color: "#e93147",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "example",
+        alias: "",
+        icon: "list",
+        title: "",
+        color: "#7852ee",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+      {
+        type: "quote",
+        alias: "cite",
+        icon: "quote-left",
+        title: "",
+        color: "#9e9e9e",
+        border_color: "",
+        border_style: "",
+        border_width: "",
+      },
+    ]
+  schema:
+    name: "callout"
+    identifier: "type"
+    properties:
+      type:
+        type: string
+        required: true
+      alias:
+        type: string
+      icon:
+        type: string
+      title:
+        type: string
+      color:
+        type: string
+      border_width:
+        type: string
+      border_style:
+        type: string
+      border_color:
+        type: string
+
+callout_fallback_type:
+  type: string
+  default: "note"
+
+callout_fallback_icon:
+  type: string
+  default: "far-pen-to-square"
+
+callout_fallback_color:
+  type: string
+  default: "#027aff"
+
+callout_background_opacity:
+  type: integer
+  default: 10
+  min: 1
+  max: 100
+
+callout_border_width:
+  type: string
+  default: ""
+
+callout_border_style:
+  type: string
+  default: ""
+
+callout_border_color:
+  type: string
+  default: ""
+
+callout_border_radius:
+  type: string
+  default: "var(--d-border-radius)"
+
+callout_padding:
+  type: string
+  default: "0.75em 0.75em 0.75em 1.5em"
+
+callout_title_font_size:
+  type: string
+  default: "inherit"
+
+callout_title_font_weight:
+  type: string
+  default: "bold"
+
+callout_title_gap:
+  type: string
+  default: "0.5em"
+
+svg_icons:
+  default: "bolt|bug|fire-flame-curved|far-lightbulb|far-circle-question|list|pen-to-square|quote-left|triangle-exclamation|xmark"
+  type: "list"
+  list_type: "compact"

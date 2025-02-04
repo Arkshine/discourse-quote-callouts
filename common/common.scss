@@ -1,0 +1,63 @@
+@import "functions";
+
+@mixin apply-if-not-empty($property, $value) {
+  @if $value != "" and $value != null {
+    #{$property}: #{$value};
+  }
+}
+
+.callout {
+  padding: $callout_padding;
+  border-radius: $callout_border_radius;
+  border-left: 0;
+
+  @include apply-if-not-empty(border-width, $callout_border_width);
+  @include apply-if-not-empty(border-style, $callout_border_style);
+  @include apply-if-not-empty(border-color, $callout_border_color);
+
+  & > *:last-child {
+    margin-bottom: revert !important;
+  }
+
+  .callout-title {
+    display: flex;
+    align-items: center;
+    gap: $callout_title_gap;
+    font-size: $callout_title_font_size;
+    font-weight: $callout_title_font_weight;
+  }
+
+  .callout-icon {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+
+    &::after {
+      content: "\200B";
+    }
+  }
+
+  $parsedSettings: parseObjectSettings($callouts);
+
+  @each $map in $parsedSettings {
+    $type: map-get($map, "type");
+    $color: map-get($map, "color");
+    $border_width: map-get($map, "border_width");
+    $border_style: map-get($map, "border_style");
+    $border_color: map-get($map, "border_color");
+
+    &.callout-#{$type} {
+      @include apply-if-not-empty(border-width, $border_width);
+      @include apply-if-not-empty(border-style, $border_style);
+      @include apply-if-not-empty(border-color, $border_color);
+
+      > .callout-title {
+        color: #{$color};
+      }
+
+      > .svg-icon {
+        color: #{$color};
+      }
+    }
+  }
+}
