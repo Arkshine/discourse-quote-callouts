@@ -91,7 +91,9 @@ class QuoteCallouts {
 
     const contents = Array.from(blockquote.childNodes).filter(
       (node) =>
-        node.nodeType === Node.ELEMENT_NODE && !node.isSameNode(titleRow)
+        node.nodeType === Node.ELEMENT_NODE &&
+        !node.isSameNode(titleRow) &&
+        node.textContent.trim()
     );
 
     if (contents.length) {
@@ -108,6 +110,21 @@ class QuoteCallouts {
           blockquote.classList.add("is-collapsed");
         }
       }
+    }
+
+    // Fix special case where a callout is quoted with [quote] tag
+    // and the callout is not wrapped in a <blockquote>.
+    if (
+      blockquote.parentElement.tagName === "ASIDE" &&
+      blockquote.parentElement.tagName !== "BLOCKQUOTE"
+    ) {
+      // Removes empty blockquote.
+      blockquote.querySelector(".callout-title ~ blockquote")?.remove();
+
+      const wrapper = document.createElement("blockquote");
+
+      blockquote.parentNode.replaceChild(wrapper, blockquote);
+      wrapper.appendChild(blockquote);
     }
   }
 
