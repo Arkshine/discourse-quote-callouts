@@ -7,6 +7,8 @@ const CALLOUT_REGEX =
   /^\[!(?<callout>[^\]]+)\](?<fold>[+-])?\s*?(?<title>[^\n\r]*)?/;
 
 class QuoteCallouts {
+  calloutTitles = [];
+
   constructor(owner, api) {
     setOwner(this, owner);
 
@@ -18,6 +20,8 @@ class QuoteCallouts {
         this.bindFoldEvents(blockquote);
       });
     });
+
+    api.cleanupStream(this.cleanup.bind(this));
   }
 
   processCalloutSettings() {
@@ -119,7 +123,7 @@ class QuoteCallouts {
       return;
     }
 
-    titleRow.addEventListener("click", () => {
+    const handleClick = () => {
       const isCollapsing = !blockquote.classList.contains("is-collapsed");
       const foldSpan = titleRow.querySelector(".callout-fold");
 
@@ -147,7 +151,20 @@ class QuoteCallouts {
         },
         { once: true }
       );
+    };
+
+    this.calloutTitles.push(titleRow);
+    titleRow._calloutHandler = handleClick;
+    titleRow.addEventListener("click", handleClick);
+  }
+
+  cleanupBindFoldEvents() {
+    this.calloutTitles.forEach((titleRow) => {
+      titleRow.removeEventListener("click", titleRow._calloutHandler);
+      delete titleRow._calloutHandler;
     });
+
+    this.calloutTitles = [];
   }
 
   createTitleRow(icon, title, fold) {
@@ -197,6 +214,10 @@ class QuoteCallouts {
       paragraph.remove();
     }
   }
+
+  cleanup() {
+    this.cleanupBindFoldEvents();
+  }
 }
 
 export default {
@@ -210,5 +231,6 @@ export default {
 
   tearDown() {
     this.instance = null;
+    this.cleanup();
   },
 };

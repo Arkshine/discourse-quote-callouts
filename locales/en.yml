@@ -80,5 +80,4 @@ en:
         description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/gap" target="_blank" title="'gap' CSS Documentation">gap</a> betweent the callout icon and title.
 
       svg_icons:
-        description: |
-          Adds your icons to the Discourse SVG icons subset.
+        description: List of FontAwesome 6 icons used in this theme component.
