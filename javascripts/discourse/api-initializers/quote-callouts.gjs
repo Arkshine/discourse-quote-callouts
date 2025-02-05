@@ -22,6 +22,20 @@ class QuoteCallouts {
       });
     });
 
+    if (api.decorateChatMessage) {
+      api.decorateChatMessage(
+        (element) => {
+          element.querySelectorAll("blockquote").forEach((blockquote) => {
+            this.processBlockquotes(blockquote);
+            this.bindFoldEvents(blockquote);
+          });
+        },
+        {
+          id: "quote-callouts",
+        }
+      );
+    }
+
     api.cleanupStream(this.cleanup.bind(this));
   }
 
