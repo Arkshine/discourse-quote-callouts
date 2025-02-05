@@ -206,6 +206,6 @@ callout_title_gap:
   default: "0.5em"
 
 svg_icons:
-  default: "bolt|bug|fire-flame-curved|far-lightbulb|far-circle-question|list|pen-to-square|quote-left|triangle-exclamation|xmark"
+  default: "bolt|bug|fire-flame-curved|far-lightbulb|far-circle-check|far-circle-question|list|pen-to-square|quote-left|triangle-exclamation|xmark"
   type: "list"
   list_type: "compact"
