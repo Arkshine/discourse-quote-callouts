@@ -1,6 +1,7 @@
 import { setOwner } from "@ember/owner";
 import { iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
+import { createSafeSVG } from "../lib/svg";
 import { capitalizeFirstLetter, hexToRGBA } from "../lib/utils";
 
 const CALLOUT_REGEX =
@@ -189,10 +190,23 @@ class QuoteCallouts {
     titleRow.classList.add("callout-title");
 
     if (icon) {
-      const iconSpan = document.createElement("span");
-      iconSpan.className = icon;
-      iconSpan.innerHTML = iconHTML(icon);
-      titleRow.appendChild(iconSpan);
+      let svg;
+
+      if (icon.startsWith("<svg")) {
+        svg = createSafeSVG(icon);
+
+        if (svg) {
+          titleRow.appendChild(svg);
+        } else {
+          icon = "pencil";
+        }
+      }
+
+      if (!svg) {
+        const iconSpan = document.createElement("span");
+        iconSpan.innerHTML = iconHTML(icon);
+        titleRow.appendChild(iconSpan);
+      }
     }
 
     if (title) {

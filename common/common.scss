@@ -76,6 +76,14 @@
     }
   }
 
+  .lucide {
+    width: 1em;
+    height: 1em;
+    line-height: 1;
+    display: inline-flex;
+    position: relative;
+  }
+
   $parsedSettings: parseObjectSettings($callouts);
 
   @each $map in $parsedSettings {
