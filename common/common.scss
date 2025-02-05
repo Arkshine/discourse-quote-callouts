@@ -93,7 +93,7 @@
     $border_style: map-get($map, "border_style");
     $border_color: map-get($map, "border_color");
 
-    &.callout-#{$type} {
+    &[data-callout-type="#{$type}"] {
       @include apply-if-not-empty(border-width, $border_width);
       @include apply-if-not-empty(border-style, $border_style);
       @include apply-if-not-empty(border-color, $border_color);

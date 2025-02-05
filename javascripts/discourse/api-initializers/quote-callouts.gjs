@@ -107,7 +107,8 @@ class QuoteCallouts {
     const titleRow = this.createTitleRow(calloutIcon, title, fold);
 
     blockquote.prepend(titleRow, firstParagraph);
-    blockquote.classList.add("callout", `callout-${calloutType}`);
+    blockquote.dataset.calloutType = calloutType;
+    blockquote.classList.add("callout");
 
     blockquote.style.backgroundColor = hexToRGBA(
       setting?.color || settings.callout_fallback_color,
@@ -115,29 +116,7 @@ class QuoteCallouts {
     );
 
     this.cleanupParagraph(firstParagraph);
-
-    const contents = Array.from(blockquote.childNodes).filter(
-      (node) =>
-        node.nodeType === Node.ELEMENT_NODE &&
-        !node.isSameNode(titleRow) &&
-        node.textContent.trim()
-    );
-
-    if (contents.length) {
-      const contentContainer = document.createElement("div");
-      contentContainer.className = "callout-content";
-      contentContainer.append(...contents);
-
-      blockquote.appendChild(contentContainer);
-
-      if (fold) {
-        blockquote.classList.add("is-collapsible");
-
-        if (fold === "-") {
-          blockquote.classList.add("is-collapsed");
-        }
-      }
-    }
+    this.createContentRow(blockquote, titleRow, fold);
   }
 
   bindFoldEvents(blockquote) {
@@ -215,6 +194,7 @@ class QuoteCallouts {
 
       if (!svg) {
         const iconSpan = document.createElement("span");
+        iconSpan.classList.add("callout-icon");
         iconSpan.innerHTML = iconHTML(icon);
         titleRow.appendChild(iconSpan);
       }
@@ -222,6 +202,7 @@ class QuoteCallouts {
 
     if (title) {
       const titleSpan = document.createElement("span");
+      titleSpan.classList.add("callout-title-inner");
       titleSpan.textContent = title;
       titleRow.appendChild(titleSpan);
     }
@@ -238,6 +219,31 @@ class QuoteCallouts {
     }
 
     return titleRow;
+  }
+
+  createContentRow(blockquote, titleRow, fold) {
+    const contents = Array.from(blockquote.childNodes).filter(
+      (node) =>
+        node.nodeType === Node.ELEMENT_NODE &&
+        !node.isSameNode(titleRow) &&
+        node.textContent.trim()
+    );
+
+    if (contents.length) {
+      const contentContainer = document.createElement("div");
+      contentContainer.className = "callout-content";
+      contentContainer.append(...contents);
+
+      blockquote.appendChild(contentContainer);
+
+      if (fold) {
+        blockquote.classList.add("is-collapsible");
+
+        if (fold === "-") {
+          blockquote.classList.add("is-collapsed");
+        }
+      }
+    }
   }
 
   cleanupParagraph(paragraph) {
