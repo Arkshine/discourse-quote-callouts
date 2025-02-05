@@ -17,6 +17,18 @@ class QuoteCallouts {
 
     api.decorateCookedElement((element) => {
       element.querySelectorAll("blockquote").forEach((blockquote) => {
+        const firstElement = blockquote?.firstElementChild;
+
+        if (
+          !firstElement ||
+          firstElement.tagName === "BLOCKQUOTE" ||
+          (firstElement.tagName === "ASIDE" &&
+            firstElement.classList.contains("quote"))
+        ) {
+          // Nested quotes
+          return;
+        }
+
         this.processBlockquotes(blockquote);
         this.bindFoldEvents(blockquote);
       });
@@ -126,21 +138,6 @@ class QuoteCallouts {
         }
       }
     }
-
-    // Fix special case where a callout is quoted with [quote] tag
-    // and the callout is not wrapped in a <blockquote>.
-    if (
-      blockquote.parentElement.tagName === "ASIDE" &&
-      blockquote.parentElement.tagName !== "BLOCKQUOTE"
-    ) {
-      // Removes empty blockquote.
-      blockquote.querySelector(".callout-title ~ blockquote")?.remove();
-
-      const wrapper = document.createElement("blockquote");
-
-      blockquote.parentNode.replaceChild(wrapper, blockquote);
-      wrapper.appendChild(blockquote);
-    }
   }
 
   bindFoldEvents(blockquote) {
@@ -247,7 +244,7 @@ class QuoteCallouts {
     const childNodes = Array.from(paragraph.childNodes);
     const [firstNode, newlineNode] = childNodes;
 
-    if (firstNode?.nodeType === Node.TEXT_NODE) {
+    if (firstNode?.nodeType === Node.TEXT_NODE || firstNode?.tagName === "BR") {
       paragraph.removeChild(firstNode);
     }
 
