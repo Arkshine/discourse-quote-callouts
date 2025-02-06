@@ -98,11 +98,7 @@
       @include apply-if-not-empty(border-style, $border_style);
       @include apply-if-not-empty(border-color, $border_color);
 
-      > .callout-title {
-        color: #{$color};
-      }
-
-      > .svg-icon {
+      > .callout-title * {
         color: #{$color};
       }
     }
