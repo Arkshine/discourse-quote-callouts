@@ -50,6 +50,7 @@
 /**
  * Parses a string of ruby-like key-value pairs into a map.
  * Format: [{"key1"=>"value1", "key2"=>"value2"}, {"key1"=>"value1","key2"=>"value2"}]
+ * Note: this is not an ideal solution, but it will do until we get a native way to access settings objects.
  *
  * @param {String} $string - The string of key-value pairs.
  * @return {Map} - The map of key-value pairs.

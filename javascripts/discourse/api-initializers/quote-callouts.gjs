@@ -94,12 +94,12 @@ class QuoteCallouts {
 
     const fold = match.groups?.fold || "";
 
-    let calloutType = match.groups?.callout.toLowerCase();
+    let calloutType = match.groups.callout.toLowerCase();
     let calloutIcon;
 
     // Remove the callout from the text
     firstChild.nodeValue = firstChild.nodeValue
-      .replace(`[!${calloutType}]${fold}`, "")
+      .replace(`[!${match.groups.callout}]${fold}`, "")
       .trimLeft();
 
     const setting = this.findCalloutSetting(calloutType);

@@ -141,6 +141,10 @@ const FIXTURES = {
     > [!note] [b]Bold[/b] and [i]italic[/i]
     > Content with BBCode title
   `),
+
+  CALLOUT_CASE_INSENSITIVE: dedent(`
+    > [!Note]
+  `),
 };
 
 async function visitAndCreate(content) {
@@ -451,5 +455,11 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".callout-content")
       .includesText("Content with BBCode title", "Content is correct");
+  });
+
+  test("callout with insensitive case", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_BBCODE_TITLE);
+
+    assert.dom(".callout").exists("Callout is rendered");
   });
 });
