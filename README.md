@@ -10,7 +10,8 @@ To create a callout, add `[!type]` to the first line of a quote, where `type` is
 > ℹ️ The type identifier is case-insensitive.
 
 ```markdown
-> [!tip] > **Tip**: Use `code snippets` to enhance readability. They provide clarity and precision.
+> [!tip]
+> **Tip**: Use `code snippets` to enhance readability. They provide clarity and precision.
 ```
 
 ![Usage example](./.github/images/usage.png)
@@ -93,7 +94,7 @@ You can use several callout types and aliases.
 Each type comes with a different background color and icon.
 
 > ℹ️ You can create your callouts or manage the default ones.
-> See the Settings section below.
+> See the `callouts` setting.
 
 > ℹ️ Any unsupported type defaults to the `note` type. See Default Fallbacks section for more information.
 
@@ -117,28 +118,6 @@ Each type comes with a different background color and icon.
 
 ![Callout types examples 1](./.github/images/types_1.png)
 ![Callout types examples 2](./.github/images/types_2.png)
-
-## Settings
-
-| Setting | Description |
-|------|-------------|
-| **callouts**                   | Define the callouts.                                                                                               |
-| **callout_fallback_type**      | The default callout type to use when the specified type is not found.<br><small>Default value: `note`</small>      |
-| **callout_fallback_icon**      | The default icon to use when the specified type is not found.<br><small>Default value: `far-pen-to-square`</small> |
-| **callout_fallback_color**     | The default color to use when the specified type is not found.<br><small>Default value: `#027aff`</small>          |
-| **callout_background_opacity** | The global background opacity for the callout (1 to 100).<br><small>Default value: `10`</small>                    |
-| **callout_border_width**       | The global border width for the callout.<br><small>Default value: `empty`</small>                                  |
-| **callout_border_style**       | The global border style for the callout.<br><small>Default value: `empty`</small>                                  |
-| **callout_border_color**       | The global border color for the callout.<br><small>Default value: `empty`</small>                                  |
-| **callout_border_radius**      | The global border radius for the callout.<br><small>Default value: `var(--d-border-radius)`</small>                |
-| **callout_padding**            | The global padding for the callout.<br><small>Default value: `0.75em 0.75em 0.75em 1.5em`</small>                  |
-| **callout_title_font_size**    | The global font size for the callout title.<br><small>Default value: `inherit`</small>                             |
-| **callout_title_font_weight**  | The global font weight for the callout title.<br><small>Default value: `bold`</small>                              |
-| **callout_title_gap**          | The global gap between the callout icon and title.<br><small>Default value: `0.5em`</small>                        |
-| **svg_icons**                  | List of FontAwesome 6 icons used in this theme component. |
-
-Callouts edition page:
-![Callout edition settings](./.github/images/callout_edition_setttings.png)
 
 ## Customization
 
@@ -170,7 +149,72 @@ You can set default values for when a specified callout type isn't found with th
 - `callout_fallback_icon`
 - `callout_fallback_color`
 
-## Global
+```markdown
+> [!discourse is fantastic]
+> Yes.
+```
+
+![Calloutfallback](./.github/images/fallback.png)
+
+### Global configuration
+
+You can customize various aspects of the callouts through
+
+- Background opacity
+- Border properties (width, style, color, radius)
+- Padding
+- Title font properties (size, weight)
+- Space between icon and title
+
+### Per-Callout configuration
+
+Each callout type can be customized with:
+
+- Custom icon
+- Title text
+- Color scheme
+- Border properties
+
+See the Settings section below.
+
+![Global setting example](./.github/images/global_setting_example.png)
+
+## Settings
+
+| Setting                        | Description                                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **callouts**                   | Define the callouts.                                                                                               |
+| **callout_fallback_type**      | The default callout type to use when the specified type is not found.<br><small>Default value: `note`</small>      |
+| **callout_fallback_icon**      | The default icon to use when the specified type is not found.<br><small>Default value: `far-pen-to-square`</small> |
+| **callout_fallback_color**     | The default color to use when the specified type is not found.<br><small>Default value: `#027aff`</small>          |
+| **callout_background_opacity** | The global background opacity for the callout (1 to 100).<br><small>Default value: `10`</small>                    |
+| **callout_border_width**       | The global border width for the callout.<br><small>Default value: `empty`</small>                                  |
+| **callout_border_style**       | The global border style for the callout.<br><small>Default value: `empty`</small>                                  |
+| **callout_border_color**       | The global border color for the callout.<br><small>Default value: `empty`</small>                                  |
+| **callout_border_radius**      | The global border radius for the callout.<br><small>Default value: `var(--d-border-radius)`</small>                |
+| **callout_padding**            | The global padding for the callout.<br><small>Default value: `0.75em 0.75em 0.75em 1.5em`</small>                  |
+| **callout_title_font_size**    | The global font size for the callout title.<br><small>Default value: `inherit`</small>                             |
+| **callout_title_font_weight**  | The global font weight for the callout title.<br><small>Default value: `bold`</small>                              |
+| **callout_title_gap**          | The global gap between the callout icon and title.<br><small>Default value: `0.5em`</small>                        |
+| **callout_icon_sizep**         | The global size for the callout icon.                                                                              |
+| **svg_icons**                  | List of FontAwesome 6 icons used in this theme component.                                                          |
+
+Per-callout setting page:
+
+| Setting           | Description                                                                                                                                                                                                                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Type\***        | The type of the callout.<br><small>This identifier will be used in the callout syntax: `[!type]`</small>                                                                                                                                                                                |
+| **Alias**         | The aliases for the callout, separated by `\|`.<br><small>Example: `cite\|quote`</small>                                                                                                                                                                                                |
+| **Icon**          | The [fontawesome](https://fontawesome.com/search?ic=free) icon for the callout.<br><small>You might need to add it to `svg_icons` setting if it's not available in the default subset.<br>Alternatively, you can provide an SVG element directly, e.g. `<svg>...</svg>`</small>         |
+| **Icon size**     | The size for the callout icon.<br><small>Note: Use only valid CSS values, e.g. `1em`, `16px`, `1.5rem`</small>                                                                                                                                                                          |
+| **Title**         | The title for the callout.<br><small>If no title is provided in the callout, this setting will be used.<br>Note: if both are empty, the title will be the callout type.</small>                                                                                                         |
+| **Color**         | The color for the callout.<br><small>This will be used for the background, title, and icon.<br>Note: Use only hexadecimal color codes, e.g. `#027aff`</small>                                                                                                                           |
+| **Border width**  | The [border width](https://developer.mozilla.org/en-US/docs/Web/CSS/border-width) for the callout.                                                                                                                                                                                      |
+| **Border style**  | The [border style](https://developer.mozilla.org/en-US/docs/Web/CSS/border-style) for the callout.                                                                                                                                                                                      |
+| **Border color**  | The [border color](https://developer.mozilla.org/en-US/docs/Web/CSS/border-color) for the callout.<br><small>Important: if you're using a CSS functions to prodive an alpha value, such as `rgba`, make sure to not use spaces between the values, e.g. `rgba(145,145,145,0.1)`</small> |
+| **Border radius** | The [border radius](https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius) for the callout.                                                                                                                                                                                    |
+
+\* Required setting
 
 ## Roadmap
 
@@ -181,3 +225,7 @@ Future development plans may include:
 ## Credits
 
 - @StefanoCecere -- Feature request, https://meta.discourse.org/t/style-blockquotes-as-callouts-in-obsidian/350045
+
+```
+
+```
