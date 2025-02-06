@@ -131,6 +131,16 @@ const FIXTURES = {
     > > [/quote]
     > Back to callout
   `),
+
+  CALLOUT_WITH_MARKDOWN_TITLE: dedent(`
+    > [!note] **Bold** and *italic*
+    > Content with formatted title
+  `),
+
+  CALLOUT_WITH_BBCODE_TITLE: dedent(`
+    > [!note] [b]Bold[/b] and [i]italic[/i]
+    > Content with BBCode title
+  `),
 };
 
 async function visitAndCreate(content) {
@@ -265,6 +275,10 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".callout-content")
       .doesNotExist("No content element when empty");
+
+    assert
+      .dom(".callout-fold")
+      .doesNotExist("Fold icon is not shown for empty callout");
   });
 
   test("invalid callout format", async function (assert) {
@@ -409,5 +423,33 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".callout blockquote .quote blockquote")
       .includesText("Third level BBCode", "BBCode quote content is preserved");
+  });
+
+  test("callout with markdown in title", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_MARKDOWN_TITLE);
+
+    assert
+      .dom(".callout-title .callout-title-inner strong")
+      .exists("Bold markdown in title is rendered");
+    assert
+      .dom(".callout-title .callout-title-inner em")
+      .exists("Italic markdown in title is rendered");
+    assert
+      .dom(".callout-content")
+      .includesText("Content with formatted title", "Content is correct");
+  });
+
+  test("callout with BBCode in title", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_BBCODE_TITLE);
+
+    assert
+      .dom(".callout-title .callout-title-inner .bbcode-b")
+      .exists("Bold BBCode in title is rendered");
+    assert
+      .dom(".callout-title .callout-title-inner .bbcode-i")
+      .exists("Italic BBCode in title is rendered");
+    assert
+      .dom(".callout-content")
+      .includesText("Content with BBCode title", "Content is correct");
   });
 });

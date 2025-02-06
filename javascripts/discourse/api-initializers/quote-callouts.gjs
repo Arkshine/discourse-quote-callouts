@@ -70,9 +70,7 @@ class QuoteCallouts {
   }
 
   findCalloutSetting(type) {
-    return this.callouts.find((callout) =>
-      callout.type.includes(type.toLowerCase())
-    );
+    return this.callouts.find((callout) => callout.type.includes(type));
   }
 
   processBlockquotes(blockquote) {
@@ -81,13 +79,28 @@ class QuoteCallouts {
       return;
     }
 
-    const match = firstParagraph.textContent.match(CALLOUT_REGEX);
+    // > [!note] This is a note
+    // First child can be only a #TEXT.
+    const firstChild = firstParagraph?.firstChild;
+    if (!firstChild || firstChild.nodeType !== Node.TEXT_NODE) {
+      return;
+    }
+
+    // [!<callout>]<fold>? <title>?
+    const match = firstChild.textContent.match(CALLOUT_REGEX);
     if (!match || !match.groups?.callout) {
       return;
     }
 
-    let calloutType = match.groups?.callout;
+    const fold = match.groups?.fold || "";
+
+    let calloutType = match.groups?.callout.toLowerCase();
     let calloutIcon;
+
+    // Remove the callout from the text
+    firstChild.nodeValue = firstChild.nodeValue
+      .replace(`[!${calloutType}]${fold}`, "")
+      .trim();
 
     const setting = this.findCalloutSetting(calloutType);
 
@@ -98,15 +111,43 @@ class QuoteCallouts {
       calloutIcon = setting.icon;
     }
 
-    const title =
-      match.groups?.title?.trim() ||
-      setting?.title ||
-      capitalizeFirstLetter(calloutType);
+    // Do we have a title, either text or element (excluding newline)?
+    const hasCustomTitle =
+      !!match.groups?.title?.trim() ||
+      (firstChild.nextSibling?.nodeType === Node.ELEMENT_NODE &&
+        firstChild.nextSibling?.tagName !== "BR");
 
-    const fold = match.groups?.fold;
+    let title;
+
+    if (hasCustomTitle) {
+      const nodes = Array.from(firstParagraph.childNodes);
+      const result = [];
+
+      // Retrieves all nodes after the callout until a newline appears
+      for (const node of nodes) {
+        if (
+          node.nodeName === "BR" ||
+          (node.nodeType === Node.TEXT_NODE &&
+            node.textContent.startsWith("\n"))
+        ) {
+          break;
+        }
+
+        result.push(node);
+      }
+
+      title = result.length ? result : null;
+    }
+
+    if (!title) {
+      title = setting?.title || capitalizeFirstLetter(calloutType);
+    }
+
     const titleRow = this.createTitleRow(calloutIcon, title, fold);
 
-    blockquote.prepend(titleRow, firstParagraph);
+    this.cleanupParagraph(firstParagraph);
+
+    blockquote.prepend(titleRow);
     blockquote.dataset.calloutType = calloutType;
     blockquote.classList.add("callout");
 
@@ -115,7 +156,6 @@ class QuoteCallouts {
       settings.callout_background_opacity / 100
     );
 
-    this.cleanupParagraph(firstParagraph);
     this.createContentRow(blockquote, titleRow, fold);
   }
 
@@ -203,7 +243,12 @@ class QuoteCallouts {
     if (title) {
       const titleSpan = document.createElement("span");
       titleSpan.classList.add("callout-title-inner");
-      titleSpan.textContent = title;
+
+      if (typeof title === "string") {
+        titleSpan.textContent = title;
+      } else {
+        titleSpan.append(...title);
+      }
       titleRow.appendChild(titleSpan);
     }
 
@@ -222,11 +267,8 @@ class QuoteCallouts {
   }
 
   createContentRow(blockquote, titleRow, fold) {
-    const contents = Array.from(blockquote.childNodes).filter(
-      (node) =>
-        node.nodeType === Node.ELEMENT_NODE &&
-        !node.isSameNode(titleRow) &&
-        node.textContent.trim()
+    const contents = Array.from(blockquote.children).filter(
+      (node) => node !== titleRow
     );
 
     if (contents.length) {
@@ -243,22 +285,22 @@ class QuoteCallouts {
           blockquote.classList.add("is-collapsed");
         }
       }
+    } else if (fold) {
+      titleRow.querySelector(".callout-fold")?.remove();
     }
   }
 
   cleanupParagraph(paragraph) {
-    const childNodes = Array.from(paragraph.childNodes);
-    const [firstNode, newlineNode] = childNodes;
-
-    if (firstNode?.nodeType === Node.TEXT_NODE || firstNode?.tagName === "BR") {
-      paragraph.removeChild(firstNode);
+    const firstParagraphChild = paragraph?.firstElementChild;
+    if (
+      firstParagraphChild &&
+      (firstParagraphChild.tagName === "BR" ||
+        !firstParagraphChild.textContent.trim())
+    ) {
+      firstParagraphChild.remove();
     }
 
-    if (newlineNode) {
-      paragraph.removeChild(newlineNode);
-    }
-
-    if (!paragraph.textContent.trim()) {
+    if (!paragraph?.textContent.trim()) {
       paragraph.remove();
     }
   }
