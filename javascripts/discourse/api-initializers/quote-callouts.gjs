@@ -100,7 +100,7 @@ class QuoteCallouts {
     // Remove the callout from the text
     firstChild.nodeValue = firstChild.nodeValue
       .replace(`[!${calloutType}]${fold}`, "")
-      .trim();
+      .trimLeft();
 
     const setting = this.findCalloutSetting(calloutType);
 
