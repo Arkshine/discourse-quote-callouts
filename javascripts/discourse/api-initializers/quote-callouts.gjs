@@ -314,8 +314,8 @@ class QuoteCallouts {
     const hasNoElements = !element.children.length;
     // No non-whitespace text nodes
     const hasNoTextNodes = Array.from(element.childNodes)
-      .filter(node => node.nodeType === Node.TEXT_NODE)
-      .every(node => !node.textContent.trim());
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .every((node) => !node.textContent.trim());
 
     return hasNoText && hasNoElements && hasNoTextNodes;
   }

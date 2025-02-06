@@ -52,6 +52,10 @@ en:
               description: >
                 The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-color" target="_blank" title="'border-color' CSS Documentation">border color</a> for the callout.<br>
                 Important: if you're using a CSS functions to prodive an alpha value, such as <tt>rgba</tt>, make sure to not use spaces between the values, e.g. <tt>rgba(145,145,145,0.1)</tt>.
+            border_radius:
+              label: Border radius
+              description: The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius" target="_blank" title="'border-radius' CSS Documentation">border radius</a> for the callout.
+
       callout_fallback_type:
         description: The default callout type to use when the specified type is not found.
       callout_fallback_icon:

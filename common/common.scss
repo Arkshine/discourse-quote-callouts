@@ -98,12 +98,14 @@
     $border_width: map-get($map, "border_width");
     $border_style: map-get($map, "border_style");
     $border_color: map-get($map, "border_color");
+    $border_radius: map-get($map, "border_radius");
     $icon_size: map-get($map, "icon_size");
 
     &[data-callout-type="#{$type}"] {
       @include apply-if-not-empty(border-width, $border_width);
       @include apply-if-not-empty(border-style, $border_style);
       @include apply-if-not-empty(border-color, $border_color);
+      @include apply-if-not-empty(border-radius, $border_radius);
 
       .callout-title {
         color: #{$color};
