@@ -302,9 +302,22 @@ class QuoteCallouts {
       firstParagraphChild.remove();
     }
 
-    if (!paragraph?.textContent.trim()) {
+    if (this.isNodeEmpty(paragraph)) {
       paragraph.remove();
     }
+  }
+
+  isNodeEmpty(element) {
+    // No text content (after trimming whitespace)
+    const hasNoText = !element.textContent.trim();
+    // No child elements (including void elements like img)
+    const hasNoElements = !element.children.length;
+    // No non-whitespace text nodes
+    const hasNoTextNodes = Array.from(element.childNodes)
+      .filter(node => node.nodeType === Node.TEXT_NODE)
+      .every(node => !node.textContent.trim());
+
+    return hasNoText && hasNoElements && hasNoTextNodes;
   }
 
   cleanup() {

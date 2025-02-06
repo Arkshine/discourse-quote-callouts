@@ -145,6 +145,11 @@ const FIXTURES = {
   CALLOUT_CASE_INSENSITIVE: dedent(`
     > [!Note]
   `),
+
+  CALLOUT_WITH_EMOJI: dedent(`
+    > [!note]
+    > :smile:
+  `),
 };
 
 async function visitAndCreate(content) {
@@ -461,5 +466,16 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.CALLOUT_WITH_BBCODE_TITLE);
 
     assert.dom(".callout").exists("Callout is rendered");
+  });
+
+  test("callout content emptiness", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_EMOJI);
+
+    assert
+      .dom(".callout-content")
+      .exists("Content element exists with emoji")
+      .hasText("", "Text content is empty but has emoji");
+
+    assert.dom(".callout-content img").exists("Contains emoji image");
   });
 });
