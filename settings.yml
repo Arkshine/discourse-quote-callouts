@@ -6,6 +6,7 @@ callouts:
         type: "note",
         alias: "",
         icon: "far-pen-to-square",
+        icon_size: "",
         title: "",
         color: "#086ddd",
         border_color: "",
@@ -16,6 +17,7 @@ callouts:
         type: "abstract",
         alias: "summary|tldr",
         icon: "far-clipboard",
+        icon_size: "",
         title: "",
         color: "#00bfbc",
         border_color: "",
@@ -26,6 +28,7 @@ callouts:
         type: "info",
         alias: "",
         icon: "far-lightbulb",
+        icon_size: "",
         title: "",
         color: "#027aff",
         border_color: "",
@@ -36,6 +39,7 @@ callouts:
         type: "todo",
         alias: "",
         icon: "far-circle-check",
+        icon_size: "",
         title: "",
         color: "#027aff",
         border_color: "",
@@ -46,6 +50,7 @@ callouts:
         type: "tip",
         alias: "hint|important",
         icon: "fire-flame-curved",
+        icon_size: "",
         title: "",
         color: "#00bfbc",
         border_color: "",
@@ -56,6 +61,7 @@ callouts:
         type: "success",
         alias: "check|done",
         icon: "check",
+        icon_size: "",
         title: "",
         color: "#44cf6e",
         border_color: "",
@@ -66,6 +72,7 @@ callouts:
         type: "question",
         alias: "help|faq",
         icon: "far-circle-question",
+        icon_size: "",
         title: "",
         color: "#ec7500",
         border_color: "",
@@ -76,6 +83,7 @@ callouts:
         type: "warning",
         alias: "caution|attention",
         icon: "triangle-exclamation",
+        icon_size: "",
         title: "",
         color: "#ec7500",
         border_color: "",
@@ -86,6 +94,7 @@ callouts:
         type: "failure",
         alias: "fail|missing",
         icon: "xmark",
+        icon_size: "",
         title: "",
         color: "#e93147",
         border_color: "",
@@ -96,6 +105,7 @@ callouts:
         type: "danger",
         alias: "error",
         icon: "bolt",
+        icon_size: "",
         title: "",
         color: "#e93147",
         border_color: "",
@@ -106,6 +116,7 @@ callouts:
         type: "bug",
         alias: "",
         icon: "bug",
+        icon_size: "",
         title: "",
         color: "#e93147",
         border_color: "",
@@ -116,6 +127,7 @@ callouts:
         type: "example",
         alias: "",
         icon: "list",
+        icon_size: "",
         title: "",
         color: "#7852ee",
         border_color: "",
@@ -126,6 +138,7 @@ callouts:
         type: "quote",
         alias: "cite",
         icon: "quote-left",
+        icon_size: "",
         title: "",
         color: "#9e9e9e",
         border_color: "",
@@ -143,6 +156,8 @@ callouts:
       alias:
         type: string
       icon:
+        type: string
+      icon_size:
         type: string
       title:
         type: string
@@ -204,6 +219,10 @@ callout_title_font_weight:
 callout_title_gap:
   type: string
   default: "0.5em"
+
+callout_icon_size:
+  type: string
+  default: "1em"
 
 svg_icons:
   default: "bolt|bug|fire-flame-curved|far-lightbulb|far-circle-check|far-circle-question|list|pen-to-square|quote-left|triangle-exclamation|xmark"

@@ -24,7 +24,11 @@ en:
                 The <a href="https://fontawesome.com/search?ic=free" target="_blank" title="Search a fontawesome icon">fontawesome</a> icon for the callout.<br>
                 You might need to add it to <tt>svg_icons</tt> setting if it's not available in the default subset.<br>
                 Alternatively, you can provide an SVG element directly, e.g.: <tt>&lt;svg&gt;...&lt;/svg&gt;</tt>.
-
+            icon_size:
+              label: Icon size
+              description: >
+                The size for the callout icon.<br>
+                Note: Use only valid CSS values, e.g. <tt>1em</tt>, <tt>16px</tt>, <tt>1.5rem</tt>.
             title:
               label: Title
               description: >
@@ -83,6 +87,8 @@ en:
         description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight" target="_blank" title="'font-weight' CSS Documentation">font weight</a> for the callout title.
       callout_title_gap:
         description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/gap" target="_blank" title="'gap' CSS Documentation">gap</a> betweent the callout icon and title.
+      callout_icon_size:
+        description: The global size for the callout icon.
 
       svg_icons:
         description: List of FontAwesome 6 icons used in this theme component.
