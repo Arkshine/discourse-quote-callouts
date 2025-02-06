@@ -222,22 +222,24 @@ class QuoteCallouts {
     if (icon) {
       let svg;
 
+      const iconSpan = document.createElement("span");
+      iconSpan.classList.add("callout-icon");
+
       if (icon.startsWith("<svg")) {
         svg = createSafeSVG(icon);
 
         if (svg) {
-          titleRow.appendChild(svg);
+          iconSpan.appendChild(svg);
         } else {
           icon = "pencil";
         }
       }
 
       if (!svg) {
-        const iconSpan = document.createElement("span");
-        iconSpan.classList.add("callout-icon");
         iconSpan.innerHTML = iconHTML(icon);
-        titleRow.appendChild(iconSpan);
       }
+
+      titleRow.appendChild(iconSpan);
     }
 
     if (title) {
