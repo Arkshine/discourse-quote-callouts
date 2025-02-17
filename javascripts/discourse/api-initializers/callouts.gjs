@@ -1,11 +1,13 @@
 import { setOwner } from "@ember/owner";
+import discourseComputed from "discourse/lib/decorators";
 import { iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { createSafeSVG } from "../lib/svg";
-import { capitalizeFirstLetter, hexToRGBA } from "../lib/utils";
+import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../lib/utils";
 
 const CALLOUT_REGEX =
-  /^\[!(?<callout>[^\]]+)\](?<fold>[+-])?\s*?(?<title>[^\n\r]*)?/;
+  /^\[!(?<callout>[^\]]+)\](?<fold>[+-])? *?(?<title>.*) *?/;
+const CALLOUT_EXCERPT_REGEX = new RegExp(`\\[!\\w+\\][+-]? *`, "gmi");
 
 class QuoteCallouts {
   calloutTitles = [];
@@ -14,6 +16,15 @@ class QuoteCallouts {
     setOwner(this, owner);
 
     this.callouts = this.processCalloutSettings();
+
+    api.modifyClass("model:topic", (Superclass) => {
+      return class extends Superclass {
+        @discourseComputed("excerpt")
+        escapedExcerpt() {
+          return super.escapedExcerpt.replace(CALLOUT_EXCERPT_REGEX, "");
+        }
+      };
+    });
 
     api.decorateCookedElement((element) => {
       element.querySelectorAll("blockquote").forEach((blockquote) => {
@@ -302,22 +313,9 @@ class QuoteCallouts {
       firstParagraphChild.remove();
     }
 
-    if (this.isNodeEmpty(paragraph)) {
+    if (isNodeEmpty(paragraph)) {
       paragraph.remove();
     }
-  }
-
-  isNodeEmpty(element) {
-    // No text content (after trimming whitespace)
-    const hasNoText = !element.textContent.trim();
-    // No child elements (including void elements like img)
-    const hasNoElements = !element.children.length;
-    // No non-whitespace text nodes
-    const hasNoTextNodes = Array.from(element.childNodes)
-      .filter((node) => node.nodeType === Node.TEXT_NODE)
-      .every((node) => !node.textContent.trim());
-
-    return hasNoText && hasNoElements && hasNoTextNodes;
   }
 
   cleanup() {
