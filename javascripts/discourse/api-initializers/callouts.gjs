@@ -21,7 +21,7 @@ class QuoteCallouts {
       return class extends Superclass {
         @discourseComputed("excerpt")
         escapedExcerpt() {
-          return super.escapedExcerpt.replace(CALLOUT_EXCERPT_REGEX, "");
+          return super.escapedExcerpt?.replace(CALLOUT_EXCERPT_REGEX, "");
         }
       };
     });
