@@ -25,7 +25,7 @@ By default, the title of the callout is its type identifier in title case. You c
 > Callouts labels can be customized.
 
 > [!abstract] [date=2032-12-22 timezone="Europe/Paris"]
-> They can also contain special inline formating like dynamic dates.
+> They can also contain special inline formatting like dynamic dates.
 ```
 
 ![Custom title examples](./.github/images/custom_titles.png)
