@@ -171,7 +171,7 @@ class QuoteCallouts {
     this.cleanupParagraph(firstParagraph);
 
     blockquote.prepend(titleRow);
-    blockquote.dataset.calloutType = calloutType;
+    blockquote.dataset.calloutType = this.getActualCalloutType(calloutType);
     blockquote.classList.add("callout");
 
     blockquote.style.backgroundColor = hexToRGBA(
