@@ -84,6 +84,18 @@ class QuoteCallouts {
     return this.callouts.find((callout) => callout.type.includes(type));
   }
 
+  getActualCalloutType(calloutType) {
+    // 查找包含该 calloutType 的设置
+    const setting = this.findCalloutSetting(calloutType);
+
+    if (!setting) {
+      return calloutType; // 找不到匹配，返回原值
+    }
+
+    // 返回原始的 type（数组的第一个元素）
+    return setting.type[0];
+  }
+
   processBlockquotes(blockquote) {
     const firstParagraph = blockquote.querySelector("p");
     if (!firstParagraph) {
