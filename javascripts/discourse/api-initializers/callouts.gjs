@@ -37,34 +37,68 @@ export default {
 };
 
 /**
+ * Parse a blockquote into a callout AST node.
+ */
+function buildCalloutAST(blockquote) {
+  const firstParagraph = blockquote.querySelector("p");
+  if (!firstParagraph) return null;
+
+  const match = firstParagraph.textContent.trim().match(CALLOUT_REGEX);
+
+  // If no marker, just return children (may include nested blockquotes)
+  if (!match) {
+    const children = Array.from(blockquote.children).map((child) => {
+      return child.tagName === "BLOCKQUOTE"
+        ? buildCalloutAST(child)
+        : child.outerHTML || child.textContent;
+    });
+    return { children };
+  }
+
+  const type = match.groups.callout?.toLowerCase() ?? "note";
+  const fold = match.groups.fold?.trim() || "";
+
+  // Strip the marker [!type][fold] from the first paragraph
+  firstParagraph.innerHTML = firstParagraph.innerHTML
+    .replace(`[!${match.groups.callout}]${fold}`, "")
+    .trimLeft();
+
+  const title = extractTitle(firstParagraph, match);
+
+  // Remove empty paragraph left after marker removal
+  if (isNodeEmpty(firstParagraph)) {
+    firstParagraph.remove();
+  }
+
+  const children = Array.from(blockquote.children).map((child) => {
+    return child.tagName === "BLOCKQUOTE"
+      ? buildCalloutAST(child)
+      : child.outerHTML || child.textContent;
+  });
+
+  return { type, title, fold, children };
+}
+
+/**
  * Transform blockquotes into QuoteCallout components
  */
-function transformBlockquotes(element, helper) {
+export function transformBlockquotes(element, helper) {
   const calloutSettings = processCalloutSettings();
 
   element.querySelectorAll("blockquote").forEach((blockquote) => {
-    const firstParagraph = blockquote.querySelector("p");
-    if (!firstParagraph) return;
+    // Skip if this blockquote has an ancestor blockquote (already rendered by recursive AST)
+    if (blockquote.parentElement?.closest("blockquote")) return;
 
-    const match = parseCallout(firstParagraph);
-    if (!match) return;
+    const ast = buildCalloutAST(blockquote);
 
-    const { type, title, fold } = processCallout(firstParagraph, match);
+    if (!ast) return;
 
-    // Collect all children (including modified first paragraph)
-    const children = Array.from(blockquote.children);
-
-    // Replace blockquote with container
     const container = document.createElement("div");
     blockquote.replaceWith(container);
 
-    // Mount Glimmer component
     helper.renderGlimmer(container, QuoteCallout, {
-      type,
-      title,
-      fold,
-      children,
-      calloutSettings
+      ast,
+      calloutSettings,
     });
   });
 }

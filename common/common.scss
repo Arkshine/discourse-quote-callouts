@@ -113,13 +113,13 @@
     $border_radius: map-get($map, "border_radius");
     $icon_size: map-get($map, "icon_size");
 
-    &[data-callout-type="#{$type}"] {
+    &.callout-type-#{$type} {
       @include apply-if-not-empty(border-width, $border_width);
       @include apply-if-not-empty(border-style, $border_style);
       @include apply-if-not-empty(border-color, $border_color);
       @include apply-if-not-empty(border-radius, $border_radius);
 
-      .callout-title {
+      >.callout-title {
         color: #{$color};
 
         .callout-title-inner * {

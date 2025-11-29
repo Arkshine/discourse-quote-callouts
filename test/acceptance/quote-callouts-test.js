@@ -210,7 +210,7 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".callout")
       .exists("Callout container exists")
-      .hasAttribute("data-callout-type", "note", "Callout has correct type");
+      .hasClass("callout-type-note", "Callout has correct type");
     assert
       .dom(".callout-title .callout-title-inner")
       .hasText("Note", "Callout title is rendered");
@@ -226,7 +226,7 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.ALIASED_CALLOUT);
 
     assert
-      .dom(".callout[data-callout-type='warning']")
+      .dom(".callout.callout-type-warning")
       .exists("Alias is correctly mapped to canonical type");
     assert
       .dom(".callout-icon svg")
@@ -237,7 +237,7 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.UNKNOWN_TYPE_CALLOUT);
 
     assert
-      .dom(".callout[data-callout-type='note']")
+      .dom(".callout.callout-type-note")
       .exists("Fallback type is applied");
     assert
       .dom(".callout-title .callout-title-inner")
@@ -252,10 +252,10 @@ acceptance("Callouts Theme Component", function (needs) {
 
     assert.dom(".callout").exists({ count: 2 }, "Both callouts are rendered");
     assert
-      .dom(".callout[data-callout-type='note']")
+      .dom(".callout.callout-type-note")
       .exists("First callout type is correct");
     assert
-      .dom(".callout[data-callout-type='warning']")
+      .dom(".callout.callout-type-warning")
       .exists("Second callout type is correct");
   });
 
@@ -300,7 +300,7 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.ALIASED_TIP);
 
     assert
-      .dom(".callout[data-callout-type='tip']")
+      .dom(".callout.callout-type-tip")
       .exists("Alias is correctly mapped to canonical type");
     assert
       .dom(".callout-title .callout-title-inner")
@@ -347,7 +347,7 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".callout")
       .exists("Callout is rendered")
-      .hasAttribute("data-callout-type", "note", "Callout has correct type");
+      .hasClass("callout-type-note", "note", "Callout has correct type");
     assert
       .dom(".callout-title .callout-title-inner")
       .hasText(

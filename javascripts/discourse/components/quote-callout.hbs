@@ -1,23 +1,41 @@
-<blockquote
-    class="callout{{if this.isCollapsable ' is-collapsible'}}{{if this.isCollapsed ' is-collapsed'}}{{if this.isTransitioning ' transitioning'}}"
+{{#if @data.ast.type}}
+  <blockquote
+    class="callout callout-type-{{this.canonicalType}}{{if this.isCollapsable ' is-collapsible'}}{{if this.isCollapsed ' is-collapsed'}}{{if this.isTransitioning ' transitioning'}}"
     style={{this.backgroundStyle}}
-    data-callout-type={{this.canonicalType}}>
+  >
     <div class="callout-title" {{on "click" this.toggleCollapse}}>
-        <span class="callout-icon">
-            {{{this.icon}}}
-        </span>
-        <span class="callout-title-inner">{{{this.title}}}</span>
+      <span class="callout-icon">
+        {{{this.icon}}}
+      </span>
+      <span class="callout-title-inner">{{{this.title}}}</span>
 
-        {{#if this.isCollapsable}}
+      {{#if this.isCollapsable}}
         <span class="callout-fold{{if this.isCollapsed ' is-collapsed'}}">
-            {{{this.chevronIcon}}}
+          {{{this.chevronIcon}}}
         </span>
-        {{/if}}
+      {{/if}}
     </div>
 
-    {{#if this.childrenHtml}}
-    <div class="callout-content" {{did-insert this.registerContent}}>
-        {{{this.childrenHtml}}}
-    </div>
+    {{#if @data.ast.children}}
+      <div class="callout-content" {{did-insert this.registerContent}}>
+        {{#each @data.ast.children as |child|}}
+          {{#if (or child.type child.children)}}
+            <QuoteCallout @data={{wrap-data child @data.calloutSettings}} />
+          {{else}}
+            {{{child}}}
+          {{/if}}
+        {{/each}}
+      </div>
     {{/if}}
-</blockquote>
+  </blockquote>
+{{else}}
+  <blockquote>
+    {{#each @data.ast.children as |child|}}
+      {{#if (or child.type child.children)}}
+        <QuoteCallout @data={{wrap-data child @data.calloutSettings}} />
+      {{else}}
+        {{{child}}}
+      {{/if}}
+    {{/each}}
+  </blockquote>
+{{/if}}
