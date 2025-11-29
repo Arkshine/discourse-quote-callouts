@@ -93,6 +93,8 @@ en:
         description: The global <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/gap" target="_blank" title="'gap' CSS Documentation">gap</a> betweent the callout icon and title.
       callout_icon_size:
         description: The global size for the callout icon.
+      callout_transition_duration_ms:
+        description: The duration of the open and close animation (ms).
 
       svg_icons:
         description: List of FontAwesome 6 icons used in this theme component.

@@ -1,0 +1,23 @@
+<blockquote
+    class="callout{{if this.isCollapsable ' is-collapsible'}}{{if this.isCollapsed ' is-collapsed'}}{{if this.isTransitioning ' transitioning'}}"
+    style={{this.backgroundStyle}}
+    data-callout-type={{this.canonicalType}}>
+    <div class="callout-title" {{on "click" this.toggleCollapse}}>
+        <span class="callout-icon">
+            {{{this.icon}}}
+        </span>
+        <span class="callout-title-inner">{{{this.title}}}</span>
+
+        {{#if this.isCollapsable}}
+        <span class="callout-fold{{if this.isCollapsed ' is-collapsed'}}">
+            {{{this.chevronIcon}}}
+        </span>
+        {{/if}}
+    </div>
+
+    {{#if this.childrenHtml}}
+    <div class="callout-content" {{did-insert this.registerContent}}>
+        {{{this.childrenHtml}}}
+    </div>
+    {{/if}}
+</blockquote>

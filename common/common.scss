@@ -35,6 +35,10 @@
     font-size: $callout_title_font_size;
     font-weight: $callout_title_font_weight;
 
+    a {
+      text-decoration: underline;
+    }
+
     .callout-fold {
       font-size: small;
       display: flex;
@@ -42,7 +46,7 @@
       padding-inline-end: 8px;
 
       .svg-icon {
-        transition: transform 100ms ease-in-out;
+        transition: transform #{ $callout_transition_duration_ms }ms ease-in-out;
 
         &::after {
           content: "\200B";
@@ -60,11 +64,19 @@
   .callout-content {
     background: transparent;
     overflow: auto;
-    transition: height 100ms cubic-bezier(0.02, 0.01, 0.47, 1);
+    transition: height #{ $callout_transition_duration_ms }ms cubic-bezier(0.02, 0.01, 0.47, 1);
   }
 
   &.is-collapsed .callout-content {
     height: 0;
+  }
+
+  &.transitioning {
+    .callout-title,
+    .callout-content {
+      // prevent accidental text selection during transition
+      user-select: none;
+    }
   }
 
   .callout-icon {
