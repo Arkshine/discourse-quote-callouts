@@ -10,8 +10,6 @@ const CALLOUT_REGEX =
 const CALLOUT_EXCERPT_REGEX = new RegExp(`\\[!\\w+\\][+-]? *`, "gmi");
 
 class QuoteCallouts {
-  calloutTitles = [];
-
   constructor(owner, api) {
     setOwner(this, owner);
 
@@ -27,6 +25,8 @@ class QuoteCallouts {
     });
 
     api.decorateCookedElement((element) => {
+      const cleanups = [];
+
       element.querySelectorAll("blockquote").forEach((blockquote) => {
         const firstElement = blockquote?.firstElementChild;
 
@@ -40,9 +40,15 @@ class QuoteCallouts {
           return;
         }
 
-        this.processBlockquotes(blockquote);
-        this.bindFoldEvents(blockquote);
+        const cleanup = this.processBlockquotes(blockquote);
+        if (cleanup) {
+          cleanups.push(cleanup);
+        }
       });
+
+      return () => {
+        cleanups.forEach((fn) => fn());
+      };
     });
 
     if (api.decorateChatMessage) {
@@ -58,8 +64,6 @@ class QuoteCallouts {
         }
       );
     }
-
-    api.cleanupStream(this.cleanup.bind(this));
   }
 
   processCalloutSettings() {
@@ -89,7 +93,7 @@ class QuoteCallouts {
     const setting = this.findCalloutSetting(calloutType);
 
     if (!setting) {
-      return calloutType; // 找不到匹配，返回原值
+      return calloutType;
     }
 
     // 返回原始的 type（数组的第一个元素）
@@ -224,18 +228,11 @@ class QuoteCallouts {
       );
     };
 
-    this.calloutTitles.push(titleRow);
-    titleRow._calloutHandler = handleClick;
     titleRow.addEventListener("click", handleClick);
-  }
 
-  cleanupBindFoldEvents() {
-    this.calloutTitles.forEach((titleRow) => {
-      titleRow.removeEventListener("click", titleRow._calloutHandler);
-      delete titleRow._calloutHandler;
-    });
-
-    this.calloutTitles = [];
+    return () => {
+      titleRow.removeEventListener("click", handleClick);
+    };
   }
 
   createTitleRow(icon, title, fold) {
@@ -313,6 +310,8 @@ class QuoteCallouts {
     } else if (fold) {
       titleRow.querySelector(".callout-fold")?.remove();
     }
+
+    return this.bindFoldEvents(blockquote);
   }
 
   cleanupParagraph(paragraph) {
@@ -329,10 +328,6 @@ class QuoteCallouts {
       paragraph.remove();
     }
   }
-
-  cleanup() {
-    this.cleanupBindFoldEvents();
-  }
 }
 
 export default {
@@ -346,6 +341,5 @@ export default {
 
   tearDown() {
     this.instance = null;
-    this.cleanup();
   },
 };
