@@ -226,8 +226,8 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.ALIASED_CALLOUT);
 
     assert
-      .dom(".callout[data-callout-type='caution']")
-      .exists("Alias is correctly mapped to correct type");
+      .dom(".callout[data-callout-type='warning']")
+      .exists("Alias is mapped to its canonical type");
     assert
       .dom(".callout-icon svg")
       .hasClass("d-icon-triangle-exclamation", "Callout icon is correct");
@@ -300,8 +300,8 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.ALIASED_TIP);
 
     assert
-      .dom(".callout[data-callout-type='hint']")
-      .exists("Alias is recognized");
+      .dom(".callout[data-callout-type='tip']")
+      .exists("Alias is mapped to its canonical type");
     assert
       .dom(".callout-title .callout-title-inner")
       .hasText("Pro Tip", "Correct title is used for aliased type");
