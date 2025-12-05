@@ -1,3 +1,4 @@
+import { action } from "@ember/object";
 import { setOwner } from "@ember/owner";
 import discourseComputed from "discourse/lib/decorators";
 import { iconHTML } from "discourse/lib/icon-library";
@@ -10,11 +11,10 @@ const CALLOUT_REGEX =
 const CALLOUT_EXCERPT_REGEX = new RegExp(`\\[!\\w+\\][+-]? *`, "gmi");
 
 class QuoteCallouts {
-  calloutTitles = [];
-
   constructor(owner, api) {
     setOwner(this, owner);
 
+    this.hasChatContext = !!api.decorateChatMessage;
     this.callouts = this.processCalloutSettings();
 
     api.modifyClass("model:topic", (Superclass) => {
@@ -27,6 +27,8 @@ class QuoteCallouts {
     });
 
     api.decorateCookedElement((element) => {
+      const cleanups = [];
+
       element.querySelectorAll("blockquote").forEach((blockquote) => {
         const firstElement = blockquote?.firstElementChild;
 
@@ -40,26 +42,47 @@ class QuoteCallouts {
           return;
         }
 
-        this.processBlockquotes(blockquote);
-        this.bindFoldEvents(blockquote);
+        const cleanup = this.processBlockquotes(blockquote);
+        if (cleanup) {
+          cleanups.push(cleanup);
+        }
       });
+
+      return () => {
+        cleanups.forEach((fn) => fn());
+      };
     });
 
-    if (api.decorateChatMessage) {
+    if (this.hasChatContext) {
       api.decorateChatMessage(
         (element) => {
           element.querySelectorAll("blockquote").forEach((blockquote) => {
             this.processBlockquotes(blockquote);
-            this.bindFoldEvents(blockquote);
           });
         },
         {
           id: "quote-callouts",
         }
       );
-    }
 
-    api.cleanupStream(this.cleanup.bind(this));
+      api.modifyClass("component:chat-message", (Superclass) => {
+        return class extends Superclass {
+          @action
+          willDestroyMessage() {
+            super.willDestroyMessage(...arguments);
+
+            this.messageContainer
+              ?.querySelectorAll(".callout-title")
+              .forEach((element) => {
+                if (element._calloutHandler) {
+                  element.removeEventListener("click", element._calloutHandler);
+                  delete element._calloutHandler;
+                }
+              });
+          }
+        };
+      });
+    }
   }
 
   processCalloutSettings() {
@@ -168,6 +191,8 @@ class QuoteCallouts {
     );
 
     this.createContentRow(blockquote, titleRow, fold);
+
+    return this.bindFoldEvents(blockquote);
   }
 
   bindFoldEvents(blockquote) {
@@ -212,18 +237,15 @@ class QuoteCallouts {
       );
     };
 
-    this.calloutTitles.push(titleRow);
-    titleRow._calloutHandler = handleClick;
+    if (this.hasChatContext) {
+      titleRow._calloutHandler = handleClick;
+    }
+
     titleRow.addEventListener("click", handleClick);
-  }
 
-  cleanupBindFoldEvents() {
-    this.calloutTitles.forEach((titleRow) => {
-      titleRow.removeEventListener("click", titleRow._calloutHandler);
-      delete titleRow._calloutHandler;
-    });
-
-    this.calloutTitles = [];
+    return () => {
+      titleRow.removeEventListener("click", handleClick);
+    };
   }
 
   createTitleRow(icon, title, fold) {
@@ -317,23 +339,18 @@ class QuoteCallouts {
       paragraph.remove();
     }
   }
-
-  cleanup() {
-    this.cleanupBindFoldEvents();
-  }
 }
 
 export default {
   name: "discourse-quote-callouts",
 
   initialize(owner) {
-    withPluginApi("1.39.0", (api) => {
+    withPluginApi((api) => {
       this.instance = new QuoteCallouts(owner, api);
     });
   },
 
-  tearDown() {
+  teardown() {
     this.instance = null;
-    this.cleanup();
   },
 };
