@@ -8,6 +8,26 @@
   "theme_version": "0.0.1",
   "minimum_discourse_version": null,
   "maximum_discourse_version": null,
-  "assets": {},
-  "modifiers": {}
+  "assets": {
+    "icons-sprite": "./assets/custom-icons.svg"
+  },
+  "modifiers": {
+    "svg_icons": [
+      "callout",
+      "callout-add-body",
+      "callout-insert-after",
+      "ellipsis-vertical",
+      "outdent",
+      "paragraph",
+      "square-plus",
+      "square-minus",
+      "trash-can",
+      "grip",
+      "grip-lines",
+      "right-to-bracket",
+      "arrow-up-from-bracket",
+      "arrow-right-from-bracket",
+      "arrows-left-right-to-line"
+    ]
+  }
 }

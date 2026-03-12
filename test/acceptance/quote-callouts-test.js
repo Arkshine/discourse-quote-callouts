@@ -150,6 +150,127 @@ const FIXTURES = {
     > [!note]
     > :smile:
   `),
+
+  FOLDABLE_CALLOUT_EXPANDED: dedent(`
+    > [!note]+ Expanded by default
+    > This content should be visible
+    > Multiple lines here
+  `),
+
+  FOLDABLE_CALLOUT_COLLAPSED: dedent(`
+    > [!warning]- Collapsed by default
+    > This content should be hidden initially
+    > But still in the DOM
+  `),
+
+  FOLDABLE_EMPTY_CALLOUT: dedent(`
+    > [!note]+
+  `),
+
+  NESTED_CALLOUT_IN_CALLOUT: dedent(`
+    > [!note] Outer callout
+    > Some content before
+    > > [!warning] Inner callout
+    > > Nested warning content
+    > Back to outer content
+  `),
+
+  MULTIPLE_NESTED_CALLOUTS: dedent(`
+    > [!note] Parent
+    > Parent content
+    > > [!tip] First child
+    > > First child content
+    > 
+    > > [!warning] Second child
+    > > Second child content
+    > Back to parent
+  `),
+
+  CALLOUT_WITH_ONLY_NESTED_CALLOUT: dedent(`
+    > [!note]
+    > > [!tip]
+    > > All content is nested
+  `),
+
+  DEEPLY_NESTED_CALLOUTS: dedent(`
+    > [!note] Level 1
+    > First level content
+    > > [!tip] Level 2
+    > > Second level content
+    > > > [!warning] Level 3
+    > > > Third level content
+  `),
+
+  MIXED_QUOTES_AND_CALLOUTS: dedent(`
+    > Regular quote start
+    > > [!note] Callout in middle
+    > > Callout content
+    > > > Regular nested quote
+    > > > Inside the callout
+    > > Back to callout
+    > Back to outer quote
+  `),
+
+  CALLOUT_WITH_CODE_BLOCK: dedent(`
+    > [!note] Code Example
+    > Here's some code:
+    > \`\`\`javascript
+    > function test() {
+    >   return true;
+    > }
+    > \`\`\`
+    > And more text after
+  `),
+
+  CALLOUT_WITH_INLINE_CODE: dedent(`
+    > [!tip]
+    > Use \`console.log()\` to debug
+    > Or \`debugger;\` statement
+  `),
+
+  CALLOUT_WITH_IMAGE: dedent(`
+    > [!note]
+    > Check this image:
+    > ![alt text](https://example.com/image.jpg)
+  `),
+
+  CALLOUT_WITH_TABLE: dedent(`
+    > [!note]
+    > Here's a table:
+    >
+    > | Column 1 | Column 2 |
+    > |----------|----------|
+    > | Value A  | Value B  |
+    > | Value C  | Value D  |
+  `),
+
+  NON_CALLOUT_WITH_MARKER_IN_CONTENT: dedent(`
+    > This is a regular quote
+    > And here is [!note] in the middle
+    > Not a callout marker
+  `),
+
+  CALLOUT_TITLE_WITH_NEWLINE: dedent(`
+    > [!note] Title here
+    > This should be content, not title
+    > More content
+  `),
+
+  ADJACENT_NESTED_CALLOUTS: dedent(`
+    > [!note] Parent
+    > > [!tip] First nested
+    > > Tip content
+    >
+    > > [!warning] Second nested
+    > > Warning content
+  `),
+
+  CALLOUT_WITH_TASK_LIST: dedent(`
+    > [!note] Todo
+    > - [ ] Unchecked task
+    > - [x] Checked task
+    > - [ ] Another task
+  `),
 };
 
 async function visitAndCreate(content) {
@@ -226,8 +347,11 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.ALIASED_CALLOUT);
 
     assert
-      .dom(".callout[data-callout-type='caution']")
-      .exists("Alias is correctly mapped to correct type");
+      .dom(".callout[data-callout-type='warning']")
+      .exists("Alias is correctly mapped to the main type");
+    assert
+      .dom(".callout[data-callout-alias='caution']")
+      .exists("Alias is correctly mapped to the alias");
     assert
       .dom(".callout-icon svg")
       .hasClass("d-icon-triangle-exclamation", "Callout icon is correct");
@@ -300,7 +424,10 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate(FIXTURES.ALIASED_TIP);
 
     assert
-      .dom(".callout[data-callout-type='hint']")
+      .dom(".callout[data-callout-type='tip']")
+      .exists("Main type is recognized");
+    assert
+      .dom(".callout[data-callout-alias='hint']")
       .exists("Alias is recognized");
     assert
       .dom(".callout-title .callout-title-inner")
@@ -477,5 +604,297 @@ acceptance("Callouts Theme Component", function (needs) {
       .hasText("", "Text content is empty but has emoji");
 
     assert.dom(".callout-content img").exists("Contains emoji image");
+  });
+
+  test("foldable callout expanded by default", async function (assert) {
+    await visitAndCreate(FIXTURES.FOLDABLE_CALLOUT_EXPANDED);
+
+    assert
+      .dom(".callout")
+      .exists("Callout is rendered")
+      .hasClass("is-collapsible", "Callout is collapsible")
+      .doesNotHaveClass("is-collapsed", "Callout is not collapsed");
+    assert.dom(".callout-fold").exists("Fold icon is shown");
+    assert
+      .dom(".callout-content")
+      .exists("Content is rendered")
+      .hasText(
+        "This content should be visible Multiple lines here",
+        "Content is visible"
+      );
+
+    await click(".callout-title");
+    assert
+      .dom(".callout")
+      .hasClass("is-collapsed", "Callout is now collapsed after click");
+  });
+
+  test("foldable callout collapsed by default", async function (assert) {
+    await visitAndCreate(FIXTURES.FOLDABLE_CALLOUT_COLLAPSED);
+
+    assert
+      .dom(".callout")
+      .exists("Callout is rendered")
+      .hasClass("is-collapsible", "Callout is collapsible")
+      .hasClass("is-collapsed", "Callout is collapsed by default");
+    assert.dom(".callout-fold").exists("Fold icon is shown");
+    assert
+      .dom(".callout-content")
+      .exists("Content exists in DOM")
+      .hasText(
+        "This content should be hidden initially But still in the DOM",
+        "Content is in DOM"
+      );
+
+    await click(".callout-title");
+    assert
+      .dom(".callout")
+      .doesNotHaveClass("is-collapsed", "Callout is now expanded after click");
+  });
+
+  test("foldable empty callout should not show fold icon", async function (assert) {
+    await visitAndCreate(FIXTURES.FOLDABLE_EMPTY_CALLOUT);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert
+      .dom(".callout-fold")
+      .doesNotExist("Fold icon is not shown for empty callout");
+    assert
+      .dom(".callout")
+      .doesNotHaveClass(
+        "is-collapsible",
+        "Empty callout is not marked as collapsible"
+      );
+  });
+
+  test("nested callout inside callout", async function (assert) {
+    await visitAndCreate(FIXTURES.NESTED_CALLOUT_IN_CALLOUT);
+
+    assert
+      .dom(".callout[data-callout-type='note']")
+      .exists("Outer note callout exists");
+    assert
+      .dom(".callout[data-callout-type='note'] > .callout-title")
+      .includesText("Outer callout", "Outer callout title is correct");
+
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='warning']"
+      )
+      .exists("Inner warning callout exists inside outer callout");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='warning'] .callout-content"
+      )
+      .includesText(
+        "Nested warning content",
+        "Inner callout content is correct"
+      );
+
+    assert
+      .dom(".callout[data-callout-type='note'] > .callout-content")
+      .includesText("Some content before", "Outer content before nested exists")
+      .includesText(
+        "Back to outer content",
+        "Outer content after nested exists"
+      );
+  });
+
+  test("multiple nested callouts at same level", async function (assert) {
+    await visitAndCreate(FIXTURES.MULTIPLE_NESTED_CALLOUTS);
+
+    assert
+      .dom(".callout[data-callout-type='note']")
+      .exists("Parent callout exists");
+
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip']"
+      )
+      .exists("First child tip callout exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='warning']"
+      )
+      .exists("Second child warning callout exists");
+
+    assert
+      .dom(".callout[data-callout-type='note'] > .callout-content")
+      .includesText("Parent content", "Parent content exists")
+      .includesText("Back to parent", "Parent content after children exists");
+  });
+
+  test("callout with only nested callout (no own content)", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_ONLY_NESTED_CALLOUT);
+
+    assert
+      .dom(".callout[data-callout-type='note']")
+      .exists("Outer callout exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip']"
+      )
+      .exists("Nested callout exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip'] .callout-content"
+      )
+      .includesText("All content is nested", "Nested content is correct");
+  });
+
+  test("deeply nested callouts (3 levels)", async function (assert) {
+    await visitAndCreate(FIXTURES.DEEPLY_NESTED_CALLOUTS);
+
+    assert
+      .dom(".callout[data-callout-type='note']")
+      .exists("Level 1 callout exists");
+
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip']"
+      )
+      .exists("Level 2 callout exists");
+
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip'] .callout[data-callout-type='warning']"
+      )
+      .exists("Level 3 callout exists");
+
+    assert
+      .dom(".callout[data-callout-type='note'] > .callout-content")
+      .includesText("First level content", "Level 1 content exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip'] > .callout-content"
+      )
+      .includesText("Second level content", "Level 2 content exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip'] .callout[data-callout-type='warning'] .callout-content"
+      )
+      .includesText("Third level content", "Level 3 content exists");
+  });
+
+  test("mixed regular quotes and callouts", async function (assert) {
+    await visitAndCreate(FIXTURES.MIXED_QUOTES_AND_CALLOUTS);
+
+    assert.dom("blockquote").exists("Outer quote exists");
+
+    assert
+      .dom("blockquote .callout[data-callout-type='note']")
+      .exists("Callout exists inside regular quote");
+
+    assert
+      .dom("blockquote .callout blockquote")
+      .exists("Regular quote exists inside callout");
+    assert
+      .dom("blockquote .callout blockquote")
+      .includesText("Regular nested quote", "Nested quote content is correct");
+  });
+
+  test("callout with code block", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_CODE_BLOCK);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert.dom(".callout pre code").exists("Code block is rendered");
+    assert
+      .dom(".callout pre code")
+      .includesText("function test()", "Code content is preserved");
+  });
+
+  test("callout with inline code", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_INLINE_CODE);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert
+      .dom(".callout-content code")
+      .exists({ count: 2 }, "Inline code elements exist");
+    assert
+      .dom(".callout-content")
+      .includesText("console.log()", "First code snippet exists")
+      .includesText("debugger;", "Second code snippet exists");
+  });
+
+  test("callout with image", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_IMAGE);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert
+      .dom(".callout-content img")
+      .exists("Image is rendered")
+      .hasAttribute("alt", "alt text", "Image has alt text")
+      .hasAttribute(
+        "src",
+        "https://example.com/image.jpg",
+        "Image has correct src"
+      );
+  });
+
+  test("callout with table", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_TABLE);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert.dom(".callout-content table").exists("Table is rendered");
+    assert
+      .dom(".callout-content table th")
+      .exists({ count: 2 }, "Table headers exist");
+    assert
+      .dom(".callout-content table td")
+      .exists({ count: 4 }, "Table cells exist");
+  });
+
+  test("non-callout with marker in content", async function (assert) {
+    await visitAndCreate(FIXTURES.NON_CALLOUT_WITH_MARKER_IN_CONTENT);
+
+    assert.dom("blockquote").exists("Blockquote exists");
+    assert
+      .dom(".callout")
+      .doesNotExist("Marker in middle of content should not create callout");
+    assert
+      .dom("blockquote")
+      .includesText("[!note]", "Marker text is preserved in regular quote");
+  });
+
+  test("callout title with newline", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_TITLE_WITH_NEWLINE);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert
+      .dom(".callout-title .callout-title-inner")
+      .hasText("Title here", "Only first line is title");
+    assert
+      .dom(".callout-content")
+      .includesText(
+        "This should be content, not title",
+        "Text after newline is content"
+      );
+  });
+
+  test("adjacent nested callouts", async function (assert) {
+    await visitAndCreate(FIXTURES.ADJACENT_NESTED_CALLOUTS);
+
+    assert
+      .dom(".callout[data-callout-type='note']")
+      .exists("Parent callout exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='tip']"
+      )
+      .exists("First nested callout exists");
+    assert
+      .dom(
+        ".callout[data-callout-type='note'] .callout[data-callout-type='warning']"
+      )
+      .exists("Second nested callout exists");
+  });
+
+  test("callout with task list", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_WITH_TASK_LIST);
+
+    assert.dom(".callout").exists("Callout is rendered");
+    assert
+      .dom(".callout-content ul li")
+      .exists({ count: 3 }, "All task items exist");
   });
 });

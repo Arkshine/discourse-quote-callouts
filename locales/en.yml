@@ -96,3 +96,24 @@ en:
 
       svg_icons:
         description: List of FontAwesome 6 icons used in this theme component.
+
+  composer:
+    callout: Insert callout
+    delete_callout: Delete callout
+    callout_content: Content
+    insert_callout: Insert a callout
+    menu:
+      folding: Folding
+      folding_options:
+        none: None
+        collapsed: Collapsed
+        expanded: Expanded
+      more_options: More options
+      toggle_folding: Toggle folding
+      add_body: Add body
+      insert_paragraph_after: Insert after
+      move: Move
+      move_up: Move up
+      move_down: Move down
+      nest_up: Nest into previous
+      nest_down: Nest into next

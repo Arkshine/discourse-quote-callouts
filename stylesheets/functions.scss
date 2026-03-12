@@ -5,7 +5,7 @@
  * @return {String} - The trimmed string.
  */
 @function str-trim($string) {
-  $string: unquote($string);
+  $string: $string;
 
   @while str-length($string) > 0 and str-index(" ", str-slice($string, 1, 1)) {
     $string: str-slice($string, 2);
@@ -58,23 +58,19 @@
 @function parseObjectSettings($string) {
   $string: str-slice($string, 2, -2);
   $items: str-split($string, "}, {");
-
   $parsedItems: ();
 
   @each $item in $items {
     $item: str-replace($item, "{", "");
     $item: str-replace($item, "}", "");
     $item: str-trim($item);
-
     $pairs: str-split($item, ", ");
     $map: ();
 
     @each $pair in $pairs {
       $pairSplit: str-split($pair, "=>");
-
       $key: str-slice(str-trim(nth($pairSplit, 1)), 2, -2);
       $value: str-slice(str-trim(nth($pairSplit, 2)), 2, -2);
-
       $map: map-merge(
         $map,
         (
