@@ -104,11 +104,6 @@ export default class CalloutNodeView extends Component {
     this.canMoveUp = hasPrev || isNested;
     this.canMoveDown = hasNext || isNested;
 
-    if ($pos.parent.type !== schema.nodes.callout_body) {
-      this.needsInsertAfter = false;
-      return;
-    }
-
     const calloutNode = state.doc.nodeAt(calloutPos);
     if (!calloutNode) {
       this.needsInsertAfter = false;
