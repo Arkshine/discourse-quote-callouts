@@ -132,7 +132,7 @@ export function handleArrowUp({
 }) {
   // From a position right after a callout whose body ends with a
   // nested callout (no paragraph to land on):
-  // insert a ¶ at the end of that callout's body so the cursor can land there.
+  // insert a paragraph at the end of that callout's body.
   //
   //   Before                          After (↑)
   //   ┌─ callout ──────────────────┐  ┌─ callout ──────────────────┐
@@ -169,7 +169,6 @@ export function handleArrowUp({
 
   // From an empty paragraph right after the callout:
   // move back into the nested callout body.
-  // Only when ALL siblings before are callouts (no regular content to navigate to).
   //
   //   Before                   After (↑)
   //   ┌─ callout ────────┐     ┌─ callout ────────┐
@@ -186,7 +185,6 @@ export function handleArrowUp({
       const prevNode = parentNode.child(index - 1);
 
       if (prevNode.type === schema.nodes.callout) {
-        // Only enter if all siblings before are callouts (no text to navigate to)
         let allCalloutsAbove = true;
         for (let i = 0; i < index; i++) {
           if (parentNode.child(i).type !== schema.nodes.callout) {
@@ -201,23 +199,18 @@ export function handleArrowUp({
             $from.after($from.depth)
           );
 
-          // Reuse existing trailing empty ¶ in the callout body,
-          // or create one if needed.
           const prevCalloutBody = prevNode.child(1);
           const lastBodyChild = prevCalloutBody.lastChild;
           const hasTrailingEmpty =
             lastBodyChild?.type === schema.nodes.paragraph &&
             lastBodyChild.content.size === 0;
 
-          // Position at end of the callout body (before delete shifted everything)
           const bodyEndPos = $from.before($from.depth) - 2;
 
           if (hasTrailingEmpty) {
-            // Move cursor into existing empty ¶
             tr.setMeta("callout:keyboardNav", true);
             tr.setSelection(TextSelection.create(tr.doc, bodyEndPos));
           } else {
-            // Insert a new empty ¶
             tr.insert(bodyEndPos, schema.nodes.paragraph.create());
             tr.setMeta("callout:keyboardNav", true);
             tr.setSelection(TextSelection.create(tr.doc, bodyEndPos + 1));

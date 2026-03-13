@@ -12,6 +12,7 @@ export function toggleCalloutCollapse(element, isCollapsing, onUpdate) {
 
   // Let the CSS handle the collapse if we can.
   if (CSS.supports("interpolate-size: allow-keywords")) {
+    element.classList.add("can-interpolate-size");
     onUpdate(isCollapsing);
     return;
   }
