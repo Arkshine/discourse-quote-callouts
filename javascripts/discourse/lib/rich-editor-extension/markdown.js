@@ -39,6 +39,15 @@ export const parse = {
 
     stripPrefix(inlineToken, marker.length);
 
+    // Trim leading whitespace from the first text token.
+    const firstChild = inlineToken.children?.[0];
+    if (firstChild?.type === "text") {
+      firstChild.content = firstChild.content.replace(/^\s+/, "");
+      if (!firstChild.content) {
+        inlineToken.children.shift();
+      }
+    }
+
     const { title, rest } = splitAtFirstLineBreak(inlineToken);
     const hasCustomTitle = title.length > 0;
 
