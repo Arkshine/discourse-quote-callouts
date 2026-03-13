@@ -1227,6 +1227,51 @@ module(
         "empty paragraph is still in the outer body (was not consumed by entering nested callout)"
       );
     });
+
+    test("ArrowLeft at position 0 in title opens the callout chooser", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note]\n> Body text"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+
+      assert.strictEqual(
+        view.state.selection.$from.parentOffset,
+        0,
+        "cursor is at position 0 in the title"
+      );
+
+      const chooser = selectKit(".callout-chooser");
+
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowLeft");
+
+      assert.true(chooser.isExpanded(), "callout chooser is opened");
+    });
+
+    test("ArrowLeft mid-title does not open the callout chooser", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note] My Title\n> Body text"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "text", (n) => n.text?.startsWith("My"));
+      await settled();
+
+      assert.ok(
+        view.state.selection.$from.parentOffset > 0,
+        "cursor is not at position 0"
+      );
+
+      const chooser = selectKit(".callout-chooser");
+
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowLeft");
+
+      assert.false(chooser.isExpanded(), "callout chooser is NOT opened");
+    });
   }
 );
 

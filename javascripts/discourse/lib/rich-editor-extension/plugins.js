@@ -1,7 +1,12 @@
 import { findCalloutOptions } from "../config";
 import { findAncestor } from "../rich-editor-utils";
 import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../utils";
-import { handleArrowDown, handleArrowUp, handleEnter } from "./keyboard";
+import {
+  handleArrowDown,
+  handleArrowLeft,
+  handleArrowUp,
+  handleEnter,
+} from "./keyboard";
 import { transformFragmentsToCallouts } from "./paste-handler";
 
 export function plugins({
@@ -154,8 +159,24 @@ export function plugins({
 
         return handlers[event.key]?.() || false;
       },
-
       handleDOMEvents: {
+        // Bypasses gapcursor
+        // which intercepts ArrowLeft before handleKeyDown can run.
+        keydown(view, event) {
+          if (event.key === "ArrowLeft") {
+            const { state } = view;
+            const { selection, schema } = state;
+            const { $from, empty } = selection;
+
+            if (empty && handleArrowLeft({ view, $from, schema, state })) {
+              event.preventDefault();
+              return true;
+            }
+          }
+
+          return false;
+        },
+
         dragstart(_view, event) {
           if (
             event.target?.nodeType === Node.ELEMENT_NODE &&

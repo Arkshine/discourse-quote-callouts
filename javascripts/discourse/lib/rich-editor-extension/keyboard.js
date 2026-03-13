@@ -323,3 +323,28 @@ export function handleEnter(
 
   return true;
 }
+
+// Inside the title:
+// ArrowLeft at position 0 in the callout title opens the callout chooser.
+export function handleArrowLeft({ view, $from, schema, state }) {
+  const titleAncestor = findAncestor(state, schema.nodes.callout_title);
+  if (!titleAncestor) {
+    return false;
+  }
+
+  if ($from.parentOffset !== 0) {
+    return false;
+  }
+
+  const titleDOM = view.nodeDOM(titleAncestor.pos);
+  const chooserHeader = titleDOM
+    ?.closest(".composer-callout-node")
+    ?.querySelector(".callout-chooser .select-kit-header");
+
+  if (chooserHeader) {
+    chooserHeader.click();
+    return true;
+  }
+
+  return false;
+}

@@ -3,6 +3,7 @@ import { tracked } from "@glimmer/tracking";
 import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
+import { next } from "@ember/runloop";
 import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import DToggleSwitch from "discourse/components/d-toggle-switch";
@@ -145,7 +146,14 @@ export default class CalloutTitleNodeView extends Component {
   }
 
   @action
-  onChange(newType) {
+  focusEditor() {
+    next(() => {
+      this.args.view.focus();
+    });
+  }
+
+  @action
+  onTypeChange(newType) {
     this.type = newType;
     this.updateNodeMarkup({ type: this.type });
 
@@ -171,6 +179,10 @@ export default class CalloutTitleNodeView extends Component {
         dispatch(tr);
       }
     }
+
+    next(() => {
+      this.focusEditor();
+    });
   }
 
   @action
@@ -242,9 +254,10 @@ export default class CalloutTitleNodeView extends Component {
       <span class="callout-left-controls" contenteditable="false">
         <CalloutChooser
           @value={{this.type}}
-          @onChange={{this.onChange}}
+          @onChange={{this.onTypeChange}}
           @editorView={{@view}}
           @disabled={{not this.isSelected}}
+          @onClose={{this.focusEditor}}
         />
       </span>
 
