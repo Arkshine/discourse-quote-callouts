@@ -183,6 +183,10 @@
         &:last-child {
           border-radius: 0 var(--d-border-radius) var(--d-border-radius) 0;
         }
+
+        &.-expanded {
+          @include default-focus;
+        }
       }
     }
 
