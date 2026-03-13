@@ -32,7 +32,6 @@ export default class Callout extends Component {
 
     this.isCollapsed = fold && fold === "-";
     this.options = this.calloutSettings.find(calloutType);
-    console.log("this.options", calloutType, this.options);
 
     if (this.options?.type) {
       this.type = this.options.mainType || this.options.type;
