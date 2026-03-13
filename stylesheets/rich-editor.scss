@@ -248,10 +248,10 @@
       }
 
       .select-kit-header-wrapper {
-        > .caret-icon {
-          font-size: var(--font-down-4);
+        > svg {
+          font-size: var(--font-down-3);
           position: absolute;
-          inset-inline-start: 0.1em;
+          inset-inline-start: 0;
           top: 50%;
           transform: translateY(-50%);
           padding-inline-start: 3px;
