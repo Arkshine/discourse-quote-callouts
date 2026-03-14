@@ -914,6 +914,63 @@ module(
         "serialized markdown includes the custom title"
       );
     });
+
+    test("clearing custom title and changing type via chooser updates the title", async function (assert) {
+      const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
+
+      const { view } = editorClass;
+
+      const title = findNode(view, "callout_title");
+      const { schema } = view.state;
+      view.dispatch(
+        view.state.tr.replaceWith(
+          title.pos + 1,
+          title.pos + 1 + title.node.content.size,
+          schema.text("My Custom Title")
+        )
+      );
+      await settled();
+
+      const callout = findNode(view, "callout");
+      assert.true(
+        callout.node.attrs.hasCustomTitle,
+        "callout has custom title after editing"
+      );
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+
+      const titleAfterEdit = findNode(view, "callout_title");
+      view.dispatch(
+        view.state.tr.delete(
+          titleAfterEdit.pos + 1,
+          titleAfterEdit.pos + 1 + titleAfterEdit.node.content.size
+        )
+      );
+
+      setCursorInNode(view, "callout_body");
+      await settled();
+
+      const calloutAfterRestore = findNode(view, "callout");
+      assert.false(
+        calloutAfterRestore.node.attrs.hasCustomTitle,
+        "hasCustomTitle is reset after default title restore"
+      );
+
+      await click(".composer-callout-node");
+
+      const chooser = selectKit(".callout-chooser");
+      await chooser.expand();
+      await chooser.selectRowByValue("warning");
+      await settled();
+
+      const titleAfterTypeChange = findNode(view, "callout_title");
+      assert.strictEqual(
+        titleAfterTypeChange.node.textContent,
+        "Warning",
+        "title is updated to the new type's default after type change"
+      );
+    });
   }
 );
 

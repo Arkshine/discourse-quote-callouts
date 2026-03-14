@@ -302,9 +302,22 @@ export function plugins({
             const options = findCalloutOptions(type);
             const defaultTitle = options?.title || capitalizeFirstLetter(type);
 
-            return newState.tr
+            const calloutPos = titlePos - 1;
+
+            const tr = newState.tr
               .insertText(defaultTitle, titlePos + 1)
               .setMeta("callout:isDefaultTitle", true);
+
+            const calloutNode = tr.doc.nodeAt(calloutPos);
+
+            if (calloutNode?.attrs.hasCustomTitle) {
+              tr.setNodeMarkup(calloutPos, null, {
+                ...calloutNode.attrs,
+                hasCustomTitle: false,
+              });
+            }
+
+            return tr;
           }
         }
       }
