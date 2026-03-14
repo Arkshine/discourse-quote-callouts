@@ -1,5 +1,5 @@
+import { computed } from "@ember/object";
 import { setOwner } from "@ember/owner";
-import discourseComputed from "discourse/lib/decorators";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
 import Callout from "../components/callout";
@@ -67,8 +67,8 @@ class QuoteCallouts {
 
     api.modifyClass("model:topic", (Superclass) => {
       return class extends Superclass {
-        @discourseComputed("excerpt")
-        escapedExcerpt() {
+        @computed("excerpt")
+        get escapedExcerpt() {
           return super.escapedExcerpt?.replace(CALLOUT_EXCERPT_REGEX, "");
         }
       };
