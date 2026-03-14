@@ -177,20 +177,14 @@ export function plugins({
         },
 
         dragstart(_view, event) {
-          if (
-            event.target?.nodeType === Node.ELEMENT_NODE &&
-            event.target.classList.contains("composer-callout-node")
-          ) {
-            event.target.classList.add("is-dragging");
+          if (event.target.nodeType === Node.ELEMENT_NODE) {
+            event.target.closest(".composer-callout-node")?.classList.add("is-dragging");
           }
         },
 
         dragend(_view, event) {
-          if (
-            event.target?.nodeType === Node.ELEMENT_NODE &&
-            event.target.classList.contains("composer-callout-node")
-          ) {
-            event.target.classList.remove("is-dragging");
+          if (event.target.nodeType === Node.ELEMENT_NODE) {
+            event.target.closest(".composer-callout-node")?.classList.remove("is-dragging");
           }
         },
       },
