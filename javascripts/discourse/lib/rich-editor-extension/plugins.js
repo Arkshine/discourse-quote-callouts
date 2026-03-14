@@ -178,13 +178,17 @@ export function plugins({
 
         dragstart(_view, event) {
           if (event.target.nodeType === Node.ELEMENT_NODE) {
-            event.target.closest(".composer-callout-node")?.classList.add("is-dragging");
+            event.target
+              .closest(".composer-callout-node")
+              ?.classList.add("is-dragging");
           }
         },
 
         dragend(_view, event) {
           if (event.target.nodeType === Node.ELEMENT_NODE) {
-            event.target.closest(".composer-callout-node")?.classList.remove("is-dragging");
+            event.target
+              .closest(".composer-callout-node")
+              ?.classList.remove("is-dragging");
           }
         },
       },
