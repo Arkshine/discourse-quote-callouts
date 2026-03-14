@@ -282,8 +282,6 @@ export default class CalloutTitleNodeView extends Component {
                         {{on "click" this.toggleMoveControls}}
                       />
                     </dropdown.item>
-
-                    <dropdown.divider />
                   {{/if}}
 
                   {{#if (or this.hasBody this.isCollapsible)}}
