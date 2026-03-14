@@ -3,7 +3,11 @@ import discourseComputed from "discourse/lib/decorators";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
 import Callout from "../components/callout";
-import { CALLOUT_EXCERPT_REGEX, CALLOUT_REGEX } from "../lib/config";
+import {
+  CALLOUT_EXCERPT_REGEX,
+  CALLOUT_REGEX,
+  DEFAULT_CALLOUT_TYPE,
+} from "../lib/config";
 import richEditorExtension from "../lib/rich-editor-extension/index";
 import {
   collectNodesUntil,
@@ -24,7 +28,7 @@ class QuoteCallouts {
       ``;
     api.addComposerToolbarPopupMenuOption({
       action: (toolbarEvent) => {
-        const defaultType = settings.callout_fallback_type || "note";
+        const defaultType = DEFAULT_CALLOUT_TYPE;
         if (toolbarEvent.commands) {
           toolbarEvent.commands.insertCallout(defaultType);
         } else {
@@ -128,10 +132,7 @@ class QuoteCallouts {
       return null;
     }
 
-    const type =
-      match.groups.callout.toLowerCase() ||
-      settings.callout_fallback_type ||
-      "note";
+    const type = match.groups.callout.toLowerCase() || DEFAULT_CALLOUT_TYPE;
     const fold = match.groups.fold || "";
     const title = match.groups.title?.trim() || "";
 

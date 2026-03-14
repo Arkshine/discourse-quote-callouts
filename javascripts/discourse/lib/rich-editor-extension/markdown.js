@@ -1,4 +1,8 @@
-import { CALLOUT_REGEX, findCalloutOptions } from "../config";
+import {
+  CALLOUT_REGEX,
+  DEFAULT_CALLOUT_TYPE,
+  findCalloutOptions,
+} from "../config";
 import { splitAtFirstLineBreak, stripPrefix } from "../rich-editor-utils";
 import { capitalizeFirstLetter } from "../utils";
 
@@ -31,7 +35,7 @@ export const parse = {
     let calloutType = rawCallout.toLowerCase();
     let options = findCalloutOptions(calloutType);
     if (!options) {
-      calloutType = settings.callout_fallback_type || "note";
+      calloutType = DEFAULT_CALLOUT_TYPE;
       options = findCalloutOptions(calloutType);
     }
 

@@ -1,4 +1,4 @@
-import { findCalloutOptions } from "../config";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
 import { findAncestor } from "../rich-editor-utils";
 import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../utils";
 import {
@@ -31,8 +31,7 @@ export function plugins({
             return;
           }
 
-          const type =
-            node.attrs.type || settings.callout_fallback_type || "note";
+          const type = node.attrs.type || DEFAULT_CALLOUT_TYPE;
           const options = findCalloutOptions(type);
           const color = options?.color || settings.callout_fallback_color;
           const bg = hexToRGBA(

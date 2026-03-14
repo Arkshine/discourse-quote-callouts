@@ -1,3 +1,4 @@
+import { DEFAULT_CALLOUT_TYPE } from "../config";
 import { buildCallout } from "../rich-editor-utils";
 
 export const inputRules = () => {
@@ -20,7 +21,7 @@ export const inputRules = () => {
     {
       match: /^\/callout(?::(\w+))?\s$/, // /callout or /callout:type
       handler: (state, match, start, end) => {
-        const type = match[1]?.toLowerCase() || "note";
+        const type = match[1]?.toLowerCase() || DEFAULT_CALLOUT_TYPE;
         return calloutInputHandler(state, type, start, end);
       },
     },

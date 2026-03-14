@@ -8,6 +8,7 @@ import concatClass from "discourse/helpers/concat-class";
 import icon from "discourse/helpers/d-icon";
 import noop from "discourse/helpers/noop";
 import iconOrSvg from "../helpers/icon-or-svg";
+import { DEFAULT_CALLOUT_TYPE } from "../lib/config";
 import {
   capitalizeFirstLetter,
   hexToRGBA,
@@ -21,8 +22,8 @@ export default class Callout extends Component {
 
   contentElement = null;
 
-  type = settings.callout_fallback_type || "note";
-  icon = settings.callout_fallback_icon || "pencil";
+  type = DEFAULT_CALLOUT_TYPE;
+  icon = settings.callout_fallback_icon;
   alias = this.type;
 
   constructor() {

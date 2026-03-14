@@ -1,4 +1,4 @@
-import { findCalloutOptions } from "../config";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
 import { plugins } from "./plugins";
 
 export const nodeSpec = {
@@ -10,7 +10,7 @@ export const nodeSpec = {
     selectable: true,
     draggable: true,
     attrs: {
-      type: { default: settings.callout_fallback_type || "note" },
+      type: { default: DEFAULT_CALLOUT_TYPE },
       title: { default: "" },
       fold: { default: "" },
       isCollapsed: { default: false },
@@ -54,7 +54,7 @@ export const nodeSpec = {
             : "";
 
           if (!findCalloutOptions(type)) {
-            type = settings.callout_fallback_type || "note";
+            type = DEFAULT_CALLOUT_TYPE;
           }
 
           return { type, title, fold, hasCustomTitle: title.length > 0 };
@@ -69,7 +69,7 @@ export const nodeSpec = {
     defining: true,
     selectable: true,
     attrs: {
-      type: { default: settings.callout_fallback_type || "note" },
+      type: { default: DEFAULT_CALLOUT_TYPE },
       fold: { default: "" },
       isCollapsed: { default: false },
       isCollapsible: { default: false },

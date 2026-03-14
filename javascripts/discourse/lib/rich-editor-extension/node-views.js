@@ -1,7 +1,7 @@
 import CalloutNodeView from "../../components/callout-node-view";
 import CalloutTitleNodeView from "../../components/callout-title-node-view";
 import GlimmerNodeView from "../../lib/glimmer-node-view";
-import { findCalloutOptions } from "../config";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
 
 const calloutNodeView =
   ({ getContext }) =>
@@ -33,10 +33,7 @@ const calloutNodeView =
             contentDOM.setAttribute("data-callout-type", options.type);
           }
         } else {
-          contentDOM.setAttribute(
-            "data-callout-type",
-            settings.callout_fallback_type || "note"
-          );
+          contentDOM.setAttribute("data-callout-type", DEFAULT_CALLOUT_TYPE);
         }
 
         if (node.attrs.isCollapsed) {

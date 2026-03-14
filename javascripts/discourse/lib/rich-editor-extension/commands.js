@@ -1,3 +1,4 @@
+import { DEFAULT_CALLOUT_TYPE } from "../config";
 import {
   buildCallout,
   insertBlockAtInlineSelection,
@@ -5,7 +6,7 @@ import {
 
 export const commands = ({ schema, utils }) => ({
   insertCallout:
-    (type = settings.callout_fallback_type || "note", title = "") =>
+    (type = DEFAULT_CALLOUT_TYPE, title = "") =>
     (state, dispatch) => {
       const { selection } = state;
       const { $from, $to } = selection;

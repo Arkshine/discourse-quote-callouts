@@ -1,4 +1,4 @@
-import { findCalloutOptions } from "./config";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "./config";
 import { capitalizeFirstLetter } from "./utils";
 
 /**
@@ -111,9 +111,10 @@ export function inNode(state, nodeType, attrs = {}) {
  * @returns {Object} The callout node.
  */
 export function buildCallout(schema, type, { title = "", bodyNodes } = {}) {
-  const options = findCalloutOptions(type);
+  let options = findCalloutOptions(type);
   if (!options) {
-    type = settings.callout_fallback_type || "note";
+    type = DEFAULT_CALLOUT_TYPE;
+    options = findCalloutOptions(type);
   }
   const titleText = title || options?.title || capitalizeFirstLetter(type);
   const titleNode = schema.nodes.callout_title.create(

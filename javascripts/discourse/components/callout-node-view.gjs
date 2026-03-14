@@ -6,6 +6,7 @@ import DButton from "discourse/components/d-button";
 import icon from "discourse/helpers/d-icon";
 import { or } from "discourse/truth-helpers";
 import { i18n } from "discourse-i18n";
+import { DEFAULT_CALLOUT_TYPE } from "../lib/config";
 import { activeCalloutPosFromView } from "../lib/rich-editor-utils";
 
 export default class CalloutNodeView extends Component {
@@ -320,7 +321,10 @@ export default class CalloutNodeView extends Component {
     const options = this.calloutSettings.find(node.attrs.type);
     const element = this.args.dom.firstElementChild;
 
-    if (options?.mainType) {
+    if (!options) {
+      element.removeAttribute("data-callout-alias");
+      element.setAttribute("data-callout-type", DEFAULT_CALLOUT_TYPE);
+    } else if (options.mainType) {
       element.setAttribute("data-callout-type", options.mainType);
       element.setAttribute("data-callout-alias", options.type);
     } else {
