@@ -10,10 +10,23 @@ export function toggleCalloutCollapse(element, isCollapsing, onUpdate) {
     return;
   }
 
+  // Clip overflow during transitions to prevent content
+  // from being visible before the container grows to reveal it.
+  element.classList.add("is-clipped");
+
   // Let the CSS handle the collapse if we can.
   if (CSS.supports("interpolate-size: allow-keywords")) {
     element.classList.add("can-interpolate-size");
     onUpdate(isCollapsing);
+
+    if (!isCollapsing) {
+      element.addEventListener(
+        "transitionend",
+        () => element.classList.remove("is-clipped"),
+        { once: true }
+      );
+    }
+
     return;
   }
 
@@ -35,6 +48,7 @@ export function toggleCalloutCollapse(element, isCollapsing, onUpdate) {
         element.style.display = "none";
       } else {
         element.style.height = "";
+        element.classList.remove("is-clipped");
       }
     },
     { once: true }

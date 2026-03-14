@@ -239,6 +239,12 @@ callout_icon_size:
   type: string
   default: "1em"
 
+callout_transition_duration_ms:
+  type: integer
+  default: 100
+  min: 0
+  max: 1000
+
 svg_icons:
   default: "arrow-down|arrow-up|arrow-up-from-bracket|bolt|bug|fire-flame-curved|far-lightbulb|far-circle-check|far-circle-question|list|pen-to-square|quote-left|right-to-bracket|triangle-exclamation|up-down|xmark"
   type: "list"

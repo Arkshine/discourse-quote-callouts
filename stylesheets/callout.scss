@@ -52,7 +52,7 @@
 
       > .svg-icon {
         transform: scale(0.8);
-        transition: transform 100ms ease-in-out;
+        transition: transform #{$callout_transition_duration_ms}ms ease-in-out;
       }
 
       &.is-collapsed > .svg-icon {
@@ -67,18 +67,19 @@
       interpolate-size: allow-keywords;
     }
 
+    padding-block: 0.05px; // Prevents first/last child margin collapsing
     overflow-y: visible;
-    transition: height 100ms cubic-bezier(.02, .01, .47, 1);
+    transition: height #{$callout_transition_duration_ms}ms cubic-bezier(.02, .01, .47, 1);
     height: auto;
+
+    &.is-clipped {
+      overflow-y: clip;
+    }
   }
 
   &.is-collapsed > .callout-content {
-    overflow: auto clip;
-    height: 0; 
-
-    > :last-child {
-      margin-bottom: 0;
-    }
+    overflow-y: clip;
+    height: 0;
   }
 
   > .callout-icon {
