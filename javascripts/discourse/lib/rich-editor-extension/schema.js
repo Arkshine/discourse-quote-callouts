@@ -53,11 +53,12 @@ export const nodeSpec = {
               : "+"
             : "";
 
-          if (!findCalloutOptions(type)) {
-            type = DEFAULT_CALLOUT_TYPE;
-          }
+          const options = findCalloutOptions(type);
+          const defaultTitle =
+            (options && (options.title || options.label)) || "";
+          const hasCustomTitle = title.length > 0 && title !== defaultTitle;
 
-          return { type, title, fold, hasCustomTitle: title.length > 0 };
+          return { type, title, fold, hasCustomTitle };
         },
       },
     ],
