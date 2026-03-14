@@ -2,7 +2,7 @@
 @import "functions";
 
 @mixin apply-if-not-empty($property, $value) {
-  @if $value != "" and $value !=null {
+  @if $value != "" and $value != null {
     #{$property}: #{$value};
   }
 }
