@@ -1,4 +1,4 @@
-export const CALLOUT_EXCERPT_REGEX = new RegExp(`\\[!\\w+\\][+-]? *`, "gmi");
+export const CALLOUT_EXCERPT_REGEX = new RegExp(`\\[![^\\]]+\\][+-]? *`, "gmi");
 export const CALLOUT_REGEX =
   /^(?<marker>\[!(?<callout>[^\]]+)\](?<fold>[+-])?\s*?)(?<title>.*)?/;
 export const CALLOUT_CONTROLS_META = "callout:controls";

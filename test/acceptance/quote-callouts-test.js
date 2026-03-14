@@ -897,4 +897,80 @@ acceptance("Callouts Theme Component", function (needs) {
       .dom(".callout-content ul li")
       .exists({ count: 3 }, "All task items exist");
   });
+
+  test("escapedExcerpt strips basic callout marker", function (assert) {
+    const store = this.owner.lookup("service:store");
+    const topic = store.createRecord("topic", {
+      excerpt: "[!note] This is a note",
+      pinned: true,
+    });
+
+    assert.strictEqual(
+      topic.escapedExcerpt,
+      "This is a note",
+      "basic callout marker is stripped from excerpt"
+    );
+  });
+
+  test("escapedExcerpt strips marker with fold indicator", function (assert) {
+    const store = this.owner.lookup("service:store");
+    const topicExpanded = store.createRecord("topic", {
+      excerpt: "[!note]+ Expanded content",
+      pinned: true,
+    });
+    const topicCollapsed = store.createRecord("topic", {
+      excerpt: "[!warning]- Collapsed content",
+      pinned: true,
+    });
+
+    assert.strictEqual(
+      topicExpanded.escapedExcerpt,
+      "Expanded content",
+      "fold + marker is stripped"
+    );
+    assert.strictEqual(
+      topicCollapsed.escapedExcerpt,
+      "Collapsed content",
+      "fold - marker is stripped"
+    );
+  });
+
+  test("escapedExcerpt strips marker with hyphenated type", function (assert) {
+    const store = this.owner.lookup("service:store");
+    const topic = store.createRecord("topic", {
+      excerpt: "[!my-custom-type] Content here",
+      pinned: true,
+    });
+
+    assert.strictEqual(
+      topic.escapedExcerpt,
+      "Content here",
+      "hyphenated callout type is stripped"
+    );
+  });
+
+  test("escapedExcerpt preserves non-callout brackets", function (assert) {
+    const store = this.owner.lookup("service:store");
+    const topic = store.createRecord("topic", {
+      excerpt: "Regular [text] here",
+      pinned: true,
+    });
+
+    assert.strictEqual(
+      topic.escapedExcerpt,
+      "Regular [text] here",
+      "non-callout brackets are not stripped"
+    );
+  });
+
+  test("escapedExcerpt returns null when excerpt is not set", function (assert) {
+    const store = this.owner.lookup("service:store");
+    const topic = store.createRecord("topic", { pinned: true });
+
+    assert.strictEqual(
+      topic.escapedExcerpt,
+      undefined,
+      "returns undefined when no excerpt"
+    );
+  });
 });
