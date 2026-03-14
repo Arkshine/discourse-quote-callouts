@@ -20,21 +20,23 @@ export default class CalloutSettings extends Service {
     for (const callout of callouts) {
       const aliases = (callout.alias ?? "")
         .split("|")
-        .map((alias) => alias.trim())
+        .map((alias) => alias.trim().toLowerCase())
         .filter(Boolean);
+
+      const type = callout.type.trim().toLowerCase();
 
       entries.push({
         ...callout,
-        type: callout.type,
-        name: callout.type,
-        title: callout.title || capitalizeFirstLetter(callout.type),
+        type,
+        name: type,
+        title: callout.title || capitalizeFirstLetter(type),
       });
 
       for (const alias of aliases) {
         entries.push({
           ...callout,
           type: alias,
-          mainType: callout.type,
+          mainType: type,
           name: alias,
           title: callout.title || capitalizeFirstLetter(alias),
         });
