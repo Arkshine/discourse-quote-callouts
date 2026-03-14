@@ -24,8 +24,12 @@ export default class CalloutRow extends SelectKitRowComponent {
     <div class="callout-selected-indicator"></div>
     <div
       class="callout-row"
-      data-callout-type={{this.item.mainType}}
-      data-callout-alias={{this.item.type}}
+      data-callout-type={{if
+        this.item.mainType
+        this.item.mainType
+        this.item.type
+      }}
+      data-callout-alias={{if this.item.mainType this.item.type}}
     >
       <div
         class={{concatClass "callout-title" (if this.isSelected "is-selected")}}
