@@ -449,6 +449,49 @@ module("Integration | Rich Editor | Callout – commands", function (hooks) {
       .dom(".callout[data-callout-type='note'] .callout-content p")
       .hasText("world", "selected inline text becomes the callout body");
   });
+
+  test("insertCallout with multi-block selection wraps all blocks in a callout", async function (assert) {
+    const editor = await setupEditor(assert, "# Heading\n\nParagraph text");
+
+    const { view } = editor;
+    const { doc } = view.state;
+
+    let from = null;
+    let to = null;
+    doc.descendants((node, pos) => {
+      if (from === null && node.type.name === "heading") {
+        from = pos + 1;
+      }
+      if (
+        node.type.name === "paragraph" &&
+        node.textContent === "Paragraph text"
+      ) {
+        to = pos + node.nodeSize - 1;
+      }
+    });
+
+    assert.notStrictEqual(from, null, "found heading");
+    assert.notStrictEqual(to, null, "found paragraph");
+
+    const SelectionClass = view.state.selection.constructor;
+    view.dispatch(
+      view.state.tr.setSelection(SelectionClass.create(doc, from, to))
+    );
+
+    const error = runInsertCallout(editor);
+    await settled();
+
+    assert.strictEqual(error, null, "no error");
+    assert
+      .dom(".callout[data-callout-type='note']")
+      .exists("callout is created");
+    assert
+      .dom(".callout-content h1")
+      .hasText("Heading", "heading is preserved in the callout body");
+    assert
+      .dom(".callout-content p")
+      .hasText("Paragraph text", "paragraph is preserved in the callout body");
+  });
 });
 
 module("Integration | Rich Editor | Callout – node view", function (hooks) {

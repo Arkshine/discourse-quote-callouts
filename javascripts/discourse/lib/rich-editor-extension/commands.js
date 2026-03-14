@@ -76,11 +76,12 @@ export const commands = ({ schema, utils }) => ({
         });
       } else {
         const isBlockSelection =
-          $from.parent === $to.parent &&
-          $from.parentOffset === 0 &&
-          $to.parentOffset === $from.parent.content.size &&
-          $from.parent.isBlock &&
-          $from.depth > 0;
+          ($from.parent === $to.parent &&
+            $from.parentOffset === 0 &&
+            $to.parentOffset === $from.parent.content.size &&
+            $from.parent.isBlock &&
+            $from.depth > 0) ||
+          $from.parent !== $to.parent;
 
         if (isBlockSelection) {
           const range = $from.blockRange($to);
