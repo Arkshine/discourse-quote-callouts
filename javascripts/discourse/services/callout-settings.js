@@ -18,7 +18,7 @@ export default class CalloutSettings extends Service {
     const entries = [];
 
     for (const callout of callouts) {
-      const aliases = callout.alias
+      const aliases = (callout.alias ?? "")
         .split("|")
         .map((alias) => alias.trim())
         .filter(Boolean);
