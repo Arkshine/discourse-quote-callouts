@@ -524,6 +524,76 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     );
   });
 
+  test("changing callout type via chooser updates the title to configured default", async function (assert) {
+    const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
+
+    await click(".composer-callout-node");
+
+    const chooser = selectKit(".callout-chooser");
+    await chooser.expand();
+    await chooser.selectRowByValue("tip");
+
+    const title = findNode(editorClass.view, "callout_title");
+    assert.strictEqual(
+      title.node.textContent,
+      "Pro Tip",
+      "title is updated to the configured default for tip"
+    );
+  });
+
+  test("changing callout type via chooser updates the title to capitalized name", async function (assert) {
+    const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
+
+    await click(".composer-callout-node");
+
+    const chooser = selectKit(".callout-chooser");
+    await chooser.expand();
+    await chooser.selectRowByValue("example");
+
+    const title = findNode(editorClass.view, "callout_title");
+    assert.strictEqual(
+      title.node.textContent,
+      "Example",
+      "title is capitalized type name when no configured title exists"
+    );
+  });
+
+  test("changing callout type via chooser does not overwrite a custom title", async function (assert) {
+    const [editorClass] = await setupRichEditor(
+      assert,
+      "> [!note] My Custom\n> Hello"
+    );
+
+    await click(".composer-callout-node");
+
+    const chooser = selectKit(".callout-chooser");
+    await chooser.expand();
+    await chooser.selectRowByValue("warning");
+
+    const title = findNode(editorClass.view, "callout_title");
+    assert.strictEqual(
+      title.node.textContent,
+      "My Custom",
+      "custom title is preserved when changing type"
+    );
+  });
+
+  test("changing callout type on non-custom title serializes without title text", async function (assert) {
+    const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
+
+    await click(".composer-callout-node");
+
+    const chooser = selectKit(".callout-chooser");
+    await chooser.expand();
+    await chooser.selectRowByValue("warning");
+
+    assert.strictEqual(
+      editorClass.value,
+      "> [!warning]\n> Hello",
+      "markdown has no title text because hasCustomTitle remains false"
+    );
+  });
+
   test("clicking delete button removes the callout", async function (assert) {
     await setupRichEditor(assert, "> [!note]\n> Hello");
 
@@ -730,85 +800,52 @@ module("Integration | Rich Editor | Callout – paste handler", function (hooks)
       )
       .exists("inner callout is nested correctly");
   });
+
+  test("pasting callout with custom title preserves it", async function (assert) {
+    await setupRichEditor(assert, "");
+
+    const text = "> [!note] My Title\n> Body text";
+    await paste(".ProseMirror", text, pasteMarkdown(text));
+
+    assert
+      .dom(".callout-title-inner")
+      .hasText("My Title", "custom title is preserved from pasted markdown");
+  });
+
+  test("pasting callout with fold marker creates collapsible node", async function (assert) {
+    const [editorClass] = await setupRichEditor(assert, "");
+
+    const text = "> [!note]+\n> Body text";
+    await paste(".ProseMirror", text, pasteMarkdown(text));
+
+    const callout = findNode(editorClass.view, "callout");
+    assert.notStrictEqual(callout, null, "callout was created");
+    assert.true(
+      callout.node.attrs.isCollapsible,
+      "pasted callout is collapsible"
+    );
+  });
 });
 
 module(
-  "Integration | Rich Editor | Callout – hasCustomTitle detection",
+  "Integration | Rich Editor | Callout – hasCustomTitle and hasBody sync",
   function (hooks) {
     setupRenderingTest(hooks);
     setupCalloutSettings(hooks);
 
-    test("editing the title text marks the callout as having a custom title", async function (assert) {
-      const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
-
-      const { view } = editorClass;
-
-      let titlePos = null;
-      let titleNode = null;
-      view.state.doc.descendants((node, pos) => {
-        if (titleNode === null && node.type.name === "callout_title") {
-          titlePos = pos;
-          titleNode = node;
-          return false;
-        }
-      });
-      assert.notStrictEqual(titlePos, null, "found title node");
-
-      const { schema } = view.state;
-      const newText = schema.text("My Custom Title");
-      view.dispatch(
-        view.state.tr.replaceWith(
-          titlePos + 1,
-          titlePos + 1 + titleNode.content.size,
-          newText
-        )
-      );
-      await settled();
-
-      assert.true(
-        editorClass.value.includes("My Custom Title"),
-        `title is included in markdown: ${editorClass.value}`
-      );
-    });
-
     test("clearing the title text and moving focus away restores the default title", async function (assert) {
       const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
-
       const { view } = editorClass;
 
-      let titlePos = null;
-      let titleNode = null;
-      view.state.doc.descendants((node, pos) => {
-        if (titleNode === null && node.type.name === "callout_title") {
-          titlePos = pos;
-          titleNode = node;
-          return false;
-        }
-      });
-      assert.notStrictEqual(titlePos, null, "found title node");
-
+      const title = findNode(view, "callout_title");
       view.dispatch(
         view.state.tr.delete(
-          titlePos + 1,
-          titlePos + 1 + titleNode.content.size
+          title.pos + 1,
+          title.pos + 1 + title.node.content.size
         )
       );
 
-      let bodyTextPos = null;
-      view.state.doc.descendants((node, pos) => {
-        if (bodyTextPos === null && node.isText) {
-          bodyTextPos = pos;
-          return false;
-        }
-      });
-      assert.notStrictEqual(bodyTextPos, null, "found body text position");
-
-      const SelectionClass = view.state.selection.constructor;
-      view.dispatch(
-        view.state.tr.setSelection(
-          SelectionClass.create(view.state.doc, bodyTextPos)
-        )
-      );
+      setCursorInNode(view, "callout_body");
       await settled();
 
       assert.false(
@@ -892,7 +929,7 @@ module(
       );
     });
 
-    test("editing title and serializing includes custom title in markdown", async function (assert) {
+    test("editing title marks hasCustomTitle and serializes correctly", async function (assert) {
       const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
       const { view } = editorClass;
 
@@ -908,6 +945,10 @@ module(
       );
       await settled();
 
+      assert.true(
+        findNode(view, "callout").node.attrs.hasCustomTitle,
+        "hasCustomTitle is set to true after editing"
+      );
       assert.strictEqual(
         editorClass.value,
         "> [!note] My Custom Title\n> Body",
@@ -971,6 +1012,45 @@ module(
         "title is updated to the new type's default after type change"
       );
     });
+
+    test("adding body content syncs hasBody to true", async function (assert) {
+      const [editorClass] = await setupRichEditor(assert, "> [!note]");
+      const { view } = editorClass;
+
+      const callout = findNode(view, "callout");
+      assert.false(callout.node.attrs.hasBody, "hasBody starts false");
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Enter");
+
+      const calloutAfter = findNode(view, "callout");
+      assert.true(
+        calloutAfter.node.attrs.hasBody,
+        "hasBody is synced to true after body content is added"
+      );
+    });
+
+    test("removing all body content syncs hasBody to false", async function (assert) {
+      const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
+      const { view } = editorClass;
+
+      const callout = findNode(view, "callout");
+      assert.true(callout.node.attrs.hasBody, "hasBody starts true");
+
+      const body = findNode(view, "callout_body");
+      const para = body.node.child(0);
+      view.dispatch(
+        view.state.tr.delete(body.pos + 1, body.pos + 1 + para.nodeSize)
+      );
+      await settled();
+
+      const calloutAfter = findNode(view, "callout");
+      assert.false(
+        calloutAfter.node.attrs.hasBody,
+        "hasBody is synced to false after body content is removed"
+      );
+    });
   }
 );
 
@@ -1025,6 +1105,27 @@ module(
         "callout is expanded after Enter"
       );
       assertCursorInBody(assert, view);
+    });
+
+    test("Enter in title inserts paragraph when body starts with nested callout", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note]\n> > [!tip]\n> > Inner"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Enter");
+
+      assertCursorInBody(assert, view);
+
+      const outerBody = findNode(view, "callout_body");
+      assert.strictEqual(
+        outerBody.node.child(0).type.name,
+        "paragraph",
+        "a paragraph was inserted before the nested callout"
+      );
     });
 
     test("ArrowDown from title into empty body inserts a paragraph and enters it", async function (assert) {
@@ -1511,6 +1612,21 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
       callout,
       null,
       "no callout created when trigger is not at line start"
+    );
+  });
+
+  test("/callout:unknowntype falls back to the configured default type", async function (assert) {
+    const [editorClass] = await setupRichEditor(assert, "");
+    const { view } = editorClass;
+
+    await typeText(view, "/callout:xyz ", settled);
+
+    const callout = findNode(view, "callout");
+    assert.notStrictEqual(callout, null, "callout node was created");
+    assert.strictEqual(
+      callout.node.attrs.type,
+      "note",
+      "unknown type falls back to the default type"
     );
   });
 });
