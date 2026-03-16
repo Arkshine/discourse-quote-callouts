@@ -25,6 +25,7 @@ export default class CalloutTitleNodeView extends Component {
   @service calloutSettings;
   @service calloutMoveState;
   @service site;
+  @service capabilities;
 
   @tracked type = this.args.node.attrs.type;
   @tracked fold = this.args.node.attrs.fold || "";
@@ -79,7 +80,7 @@ export default class CalloutTitleNodeView extends Component {
   }
 
   get canShowMoreOptions() {
-    return this.site.mobileView || this.hasBody || this.isCollapsible;
+    return this.capabilities.touch || this.hasBody || this.isCollapsible;
   }
 
   ignoreMutation(mutation) {
@@ -273,7 +274,7 @@ export default class CalloutTitleNodeView extends Component {
             >
               <:content>
                 <DropdownMenu @class="callout-control-dropdown" as |dropdown|>
-                  {{#if this.site.mobileView}}
+                  {{#if this.capabilities.touch}}
                     <dropdown.item class="callout-control-dropdown__move-item">
                       <span>{{i18n (themePrefix "composer.menu.move")}}</span>
                       <DToggleSwitch
