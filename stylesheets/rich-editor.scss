@@ -113,7 +113,7 @@
     .callout-title {
       display: flex;
       align-items: center;
-      gap: 0;
+      gap: 0.25em;
       cursor: inherit;
 
       .callout-controls-hub {
@@ -190,10 +190,8 @@
     .callout-left-controls {
       display: flex;
       align-items: center;
-      gap: var(--space-1);
       order: 1;
-      margin-inline-end: 0.25em;
-      margin-inline-start: -1em;
+      margin-inline-start: -0.25em;
     }
 
     .callout-chooser-trigger {
@@ -205,7 +203,7 @@
       pointer-events: none;
       cursor: pointer;
       border-radius: var(--d-border-radius);
-
+      
       &[disabled] {
         opacity: 1;
       }
