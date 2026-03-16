@@ -120,11 +120,8 @@
         display: contents;
 
         &.is-selected {
-          .callout-chooser {
+          .callout-chooser-trigger {
             pointer-events: auto;
-            .select-kit-header-wrapper > svg {
-              opacity: 1;
-            }
           }
         }
       }
@@ -199,102 +196,117 @@
       margin-inline-start: -1em;
     }
 
-    &.is-selected {
-      .callout-chooser {
-        border-radius: var(--d-border-radius);
-        backdrop-filter: contrast(1.2);
-        cursor: pointer;
-      }
-    }
-
-    .callout-chooser {
+    .callout-chooser-trigger {
       display: flex;
       align-items: center;
-      height: 100%;
-      margin: 0;
-      padding: 0.2em 0.25em 0.2em 0em;
+      padding: 0.2em 0.25em;
       background: none;
+      border: none;
       pointer-events: none;
+      cursor: pointer;
+      border-radius: var(--d-border-radius);
+
+      &[disabled] {
+        opacity: 1;
+      }
+
+      .callout-icon svg {
+        color: var(--q-callout-color);
+        display: block;
+      }
 
       &:hover {
         background: var(--q-callout-color-darker);
       }
 
-      &.has-selection .select-kit-header {
-        outline: none;
-        border: none;
-      }
-
-      &.is-expanded {
+      &.-expanded {
         @include default-focus;
       }
+    }
 
-      .select-kit-header {
-        padding: 0;
-        padding-inline-start: 1em;
-        position: relative;
-        background: transparent;
-        border: none;
+    &.is-selected {
+      .callout-chooser-trigger {
+        backdrop-filter: contrast(1.2);
       }
+    }
+  }
+}
 
-      .select-kit-body {
-        top: 3px !important;
+.callout-chooser-content {
+  z-index: z("mobile-composer");
+
+  .fk-d-menu__inner-content {
+    scrollbar-width: thin;
+  }
+
+  .callout-chooser-panel {
+    display: grid;
+    min-width: 150px;
+  }
+
+  .callout-chooser-filter {
+    contain: inline-size;
+    padding: var(--space-1);
+    padding-bottom: 0;
+
+    input {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      margin: 0;
+      font-size: var(--font-down-1-rem);
+      border: 1px solid var(--primary-low);
+      border-radius: var(--d-border-radius);
+      background: var(--secondary);
+
+      &:focus {
+        border-color: var(--tertiary);
+        outline: none;
       }
+    }
+  }
 
-      .select-kit-selected-name {
-        display: flex;
-        align-items: center;
+  .callout-chooser-list {
+    max-height: 250px;
+    padding: var(--space-1);
+  }
 
-        svg {
-          color: var(--q-callout-color);
-          display: block;
-        }
-      }
+  .callout-chooser-row {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    width: 100%;
+    padding: var(--space-1) var(--space-2);
+    border: none;
+    border-radius: var(--d-border-radius);
+    background: none;
+    cursor: pointer;
+    font-size: var(--font-0-rem);
+    text-align: start;
 
-      .select-kit-header-wrapper {
-        > svg {
-          font-size: var(--font-down-3);
-          position: absolute;
-          inset-inline-start: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          padding-inline-start: 3px;
-          color: var(--primary-medium) !important;
-          pointer-events: none;
-          opacity: 0;
-          transition: opacity 0.2s;
-        }
-      }
+    &:is(:hover, .is-highlighted) {
+      background: var(--q-callout-background);
+      border: none;
+      outline: 2px solid light-dark(var(--primary-200), var(--primary-800));
+      outline-offset: -2px;
+    }
 
-      .callout-row-wrapper {
-        display: flex;
-        align-items: stretch;
-        gap: 0.5em;
+    &.is-selected {
+      outline: 2px solid var(--tertiary);
+      outline-offset: -2px;
+    }
 
-        padding: var(--space-1);
+    &__name {
+      flex: 1;
+      color: var(--q-callout-color);
+    }
 
-        &:first-child {
-          margin-top: 0.5em;
-        }
+    &__icon {
+      order: 1;
 
-        .callout-row {
-          width: 70%;
-          margin-inline-start: 0.5em;
-        }
-
-        &.is-highlighted {
-          outline: 2px solid var(--tertiary);
-          outline-offset: -2px;
-          background-color: transparent !important;
-        }
-
-        &.is-selected {
-          background-color: transparent;
-
-          .callout-selected-indicator {
-            outline: 2px solid var(--tertiary);
-          }
-        }
+      svg {
+        color: var(--q-callout-color) !important;
+        display: block;
       }
     }
   }

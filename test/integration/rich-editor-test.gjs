@@ -15,7 +15,6 @@ import {
   setupRichEditor,
   testMarkdown,
 } from "discourse/tests/helpers/rich-editor-helper";
-import selectKit from "discourse/tests/helpers/select-kit-helper";
 import {
   assertCursorInBody,
   callHandleClick,
@@ -25,6 +24,11 @@ import {
   setCursorInNode,
   typeText,
 } from "../helpers/rich-editor-helpers";
+
+async function selectCalloutType(type) {
+  await click(".callout-chooser-trigger");
+  await click(`.callout-chooser-row[data-type="${type}"]`);
+}
 
 function setupCalloutSettings(hooks) {
   hooks.beforeEach(function () {
@@ -534,18 +538,19 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
   test("callout chooser is present and shows correct type", async function (assert) {
     await setupRichEditor(assert, "> [!tip]\n> Content");
 
-    assert.dom(".callout-chooser").exists("callout chooser is mounted");
-    assert.dom(".selected-name svg").hasClass("d-icon-fire-flame-curved");
+    assert
+      .dom(".callout-chooser-trigger")
+      .exists("callout chooser trigger is mounted");
+    assert
+      .dom(".callout-chooser-trigger .callout-icon svg")
+      .hasClass("d-icon-fire-flame-curved");
   });
 
   test("changing callout type via chooser updates the node", async function (assert) {
     await setupRichEditor(assert, "> [!note]\n> Hello");
 
     await click(".composer-callout-node");
-
-    const chooser = selectKit(".callout-chooser");
-    await chooser.expand();
-    await chooser.selectRowByValue("warning");
+    await selectCalloutType("warning");
 
     assert
       .dom(".callout[data-callout-type='warning']")
@@ -556,10 +561,7 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
 
     await click(".composer-callout-node");
-
-    const chooser = selectKit(".callout-chooser");
-    await chooser.expand();
-    await chooser.selectRowByValue("warning");
+    await selectCalloutType("warning");
 
     assert.true(
       editorClass.value.startsWith("> [!warning]"),
@@ -571,10 +573,7 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
 
     await click(".composer-callout-node");
-
-    const chooser = selectKit(".callout-chooser");
-    await chooser.expand();
-    await chooser.selectRowByValue("tip");
+    await selectCalloutType("tip");
 
     const title = findNode(editorClass.view, "callout_title");
     assert.strictEqual(
@@ -588,10 +587,7 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
 
     await click(".composer-callout-node");
-
-    const chooser = selectKit(".callout-chooser");
-    await chooser.expand();
-    await chooser.selectRowByValue("example");
+    await selectCalloutType("example");
 
     const title = findNode(editorClass.view, "callout_title");
     assert.strictEqual(
@@ -608,10 +604,7 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     );
 
     await click(".composer-callout-node");
-
-    const chooser = selectKit(".callout-chooser");
-    await chooser.expand();
-    await chooser.selectRowByValue("warning");
+    await selectCalloutType("warning");
 
     const title = findNode(editorClass.view, "callout_title");
     assert.strictEqual(
@@ -625,10 +618,7 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
 
     await click(".composer-callout-node");
-
-    const chooser = selectKit(".callout-chooser");
-    await chooser.expand();
-    await chooser.selectRowByValue("warning");
+    await selectCalloutType("warning");
 
     assert.strictEqual(
       editorClass.value,
@@ -1042,10 +1032,7 @@ module(
       );
 
       await click(".composer-callout-node");
-
-      const chooser = selectKit(".callout-chooser");
-      await chooser.expand();
-      await chooser.selectRowByValue("warning");
+      await selectCalloutType("warning");
       await settled();
 
       const titleAfterTypeChange = findNode(view, "callout_title");
@@ -1211,7 +1198,6 @@ module(
       );
       const { view } = editorClass;
 
-      // Place cursor inside the inner callout body
       setCursorInNode(
         view,
         "callout_body",
@@ -1420,8 +1406,6 @@ module(
       await settled();
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
 
-      // Should NOT have entered the nested callout because there is
-      // a regular paragraph ("content") above the nested callout.
       const bodyAfter = findNode(view, "callout_body");
       assert.ok(
         bodyAfter.node.childCount > 1,
@@ -1445,11 +1429,11 @@ module(
         "cursor is at position 0 in the title"
       );
 
-      const chooser = selectKit(".callout-chooser");
-
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowLeft");
 
-      assert.true(chooser.isExpanded(), "callout chooser is opened");
+      assert
+        .dom(".callout-chooser-trigger")
+        .hasClass("-expanded", "callout chooser is opened");
     });
 
     test("ArrowLeft mid-title does not open the callout chooser", async function (assert) {
@@ -1467,11 +1451,11 @@ module(
         "cursor is not at position 0"
       );
 
-      const chooser = selectKit(".callout-chooser");
-
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowLeft");
 
-      assert.false(chooser.isExpanded(), "callout chooser is NOT opened");
+      assert
+        .dom(".callout-chooser-trigger")
+        .doesNotHaveClass("-expanded", "callout chooser is NOT opened");
     });
   }
 );
@@ -1881,7 +1865,6 @@ module("Integration | Rich Editor | Callout – move controls", function (hooks)
       "[data-callout-type='tip'] ~ .callout-top-controls .callout-nest-btn:not(.callout-nest-down)"
     );
 
-    // tip should now be nested inside note
     const tipNode = findNode(
       editorClass.view,
       "callout",
@@ -1908,7 +1891,6 @@ module("Integration | Rich Editor | Callout – move controls", function (hooks)
       "[data-callout-type='note'] ~ .callout-bottom-controls .callout-nest-down"
     );
 
-    // note should now be nested inside tip
     const noteNode = findNode(
       editorClass.view,
       "callout",

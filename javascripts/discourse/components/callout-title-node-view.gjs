@@ -18,7 +18,7 @@ import {
   findAncestor,
 } from "../lib/rich-editor-utils";
 import { capitalizeFirstLetter, toggleCalloutCollapse } from "../lib/utils";
-import CalloutChooser from "./select-kit/callout-chooser";
+import CalloutChooser from "./callout-chooser";
 
 export default class CalloutTitleNodeView extends Component {
   @service appEvents;
@@ -255,9 +255,8 @@ export default class CalloutTitleNodeView extends Component {
         <CalloutChooser
           @value={{this.type}}
           @onChange={{this.onTypeChange}}
-          @editorView={{@view}}
-          @disabled={{not this.isSelected}}
           @onClose={{this.focusEditor}}
+          @disabled={{not this.isSelected}}
         />
       </span>
 

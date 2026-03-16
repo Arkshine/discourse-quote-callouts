@@ -93,7 +93,7 @@ export function plugins({
           return false;
         }
 
-        if (view.dom.querySelector(".callout-chooser.is-expanded")) {
+        if (view.dom.querySelector(".callout-chooser-trigger.-expanded")) {
           return false;
         }
 

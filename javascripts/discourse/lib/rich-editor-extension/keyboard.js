@@ -330,12 +330,12 @@ export function handleArrowLeft({ view, $from, schema, state }) {
   }
 
   const titleDOM = view.nodeDOM(titleAncestor.pos);
-  const chooserHeader = titleDOM
+  const chooserTrigger = titleDOM
     ?.closest(".composer-callout-node")
-    ?.querySelector(".callout-chooser .select-kit-header");
+    ?.querySelector(".callout-chooser-trigger");
 
-  if (chooserHeader) {
-    chooserHeader.click();
+  if (chooserTrigger) {
+    chooserTrigger.click();
     return true;
   }
 
