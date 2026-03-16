@@ -137,3 +137,11 @@
     }
   }
 }
+
+:not(.--rich-editor-enabled) .callout-chooser-trigger {
+  padding: 0;
+
+  .callout-icon svg {
+    color: var(--q-callout-color);
+  } 
+}

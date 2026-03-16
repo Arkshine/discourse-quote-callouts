@@ -973,4 +973,61 @@ acceptance("Callouts Theme Component", function (needs) {
       "returns undefined when no excerpt"
     );
   });
+
+  test("callout chooser in preview changes top-level callout type", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    assert
+      .dom(".d-editor-preview .callout[data-callout-type='note']")
+      .exists("Note callout is rendered in preview");
+    assert
+      .dom(".d-editor-preview .callout-chooser-trigger")
+      .exists("Callout chooser trigger is shown in preview");
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+    await click('.callout-chooser-row[data-type="warning"]');
+
+    assert.ok(
+      document.querySelector(".d-editor-input").value.includes("[!warning]"),
+      "Textarea now contains [!warning] instead of [!note]"
+    );
+  });
+
+  test("callout chooser in preview changes nested callout type", async function (assert) {
+    await visitAndCreate(FIXTURES.NESTED_CALLOUT_IN_CALLOUT);
+
+    assert
+      .dom(".d-editor-preview .callout[data-callout-type='note']")
+      .exists("Outer note callout is rendered");
+    assert
+      .dom(
+        ".d-editor-preview .callout[data-callout-type='note'] .callout[data-callout-type='warning']"
+      )
+      .exists("Nested warning callout is rendered");
+
+    await click(
+      ".d-editor-preview .callout[data-callout-type='warning'] .callout-chooser-trigger"
+    );
+    await click('.callout-chooser-row[data-type="tip"]');
+
+    const text = document.querySelector(".d-editor-input").value;
+    assert.ok(text.includes("[!note]"), "Outer callout type is unchanged");
+    assert.ok(text.includes("[!tip]"), "Nested callout type changed to tip");
+    assert.notOk(
+      text.includes("[!warning]"),
+      "Original nested warning type is removed"
+    );
+  });
+
+  test("callout chooser is not shown for rendered posts", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    assert
+      .dom(".d-editor-preview .callout-chooser-trigger")
+      .exists("Chooser appears in preview");
+
+    assert
+      .dom(".d-editor-preview .callout-chooser-trigger")
+      .exists({ count: 1 }, "Only one chooser trigger for one callout");
+  });
 });

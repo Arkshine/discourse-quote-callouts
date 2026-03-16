@@ -147,6 +147,7 @@ export default class CalloutChooser extends Component {
       @onClose={{this.onClose}}
       @onRegisterApi={{this.onRegisterApi}}
       @offset={{2}}
+      class="btn-transparent"
     >
       <:trigger>
         <span class="callout-icon">

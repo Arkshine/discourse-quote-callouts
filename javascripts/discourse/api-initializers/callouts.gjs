@@ -91,6 +91,9 @@ class QuoteCallouts {
   }
 
   processCookedElement(element, helper) {
+    const isPreview = !helper.model;
+    const calloutCounter = { value: 0 };
+
     for (const blockquote of element.querySelectorAll("blockquote")) {
       // Skip if already processed (replaced with container)
       if (!blockquote.parentElement) {
@@ -100,6 +103,10 @@ class QuoteCallouts {
       const calloutTrees = this.parseHeaders(blockquote);
       if (!calloutTrees?.isCallout) {
         continue;
+      }
+
+      if (isPreview) {
+        this.assignPreviewMetadata(calloutTrees, calloutCounter);
       }
 
       const { root } = calloutTrees;
@@ -174,6 +181,19 @@ class QuoteCallouts {
       fold,
       children,
     };
+  }
+
+  assignPreviewMetadata(calloutData, counter) {
+    calloutData.isPreview = true;
+    calloutData.calloutIndex = counter.value++;
+
+    if (calloutData.children) {
+      for (const child of calloutData.children) {
+        if (child.isCallout) {
+          this.assignPreviewMetadata(child, counter);
+        }
+      }
+    }
   }
 
   collectTitleNodes(paragraphEl) {

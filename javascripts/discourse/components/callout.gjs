@@ -14,6 +14,7 @@ import {
   hexToRGBA,
   toggleCalloutCollapse,
 } from "../lib/utils";
+import CalloutChooser from "./callout-chooser";
 
 export default class Callout extends Component {
   @service calloutSettings;
@@ -97,6 +98,38 @@ export default class Callout extends Component {
     );
   }
 
+  @action
+  onTypeChange(newType) {
+    const { calloutIndex } = this.args.data;
+    const textarea = document.querySelector(".d-editor-input");
+    if (!textarea) {
+      return;
+    }
+
+    const text = textarea.value;
+    const markerRegex = /\[!([^\]]+)\]/gim;
+    let match;
+    let count = 0;
+
+    while ((match = markerRegex.exec(text)) !== null) {
+      const lineStart = text.lastIndexOf("\n", match.index - 1) + 1;
+      const prefix = text.substring(lineStart, match.index);
+      if (!/^(?:>[ \t]*)+$/.test(prefix)) {
+        continue;
+      }
+
+      if (count === calloutIndex) {
+        const newMarker = `[!${newType}]`;
+
+        textarea.setSelectionRange(match.index, match.index + match[0].length);
+        textarea.focus();
+        document.execCommand("insertText", false, newMarker);
+        break;
+      }
+      count++;
+    }
+  }
+
   <template>
     <blockquote
       class={{concatClass
@@ -115,7 +148,13 @@ export default class Callout extends Component {
         {{on "click" (if this.isCollapsible this.toggleCollapse (noop))}}
         {{on "mousedown" this.preventSelection}}
       >
-        {{#if this.icon}}
+        {{#if @data.isPreview}}
+          <CalloutChooser
+            @value={{readonly this.type}}
+            @onChange={{this.onTypeChange}}
+            class="btn-flat"
+          />
+        {{else if this.icon}}
           <span class="callout-icon">
             {{iconOrSvg this.icon}}
           </span>
