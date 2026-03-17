@@ -24,7 +24,6 @@ export default class CalloutTitleNodeView extends Component {
   @service appEvents;
   @service calloutSettings;
   @service calloutMoveState;
-  @service site;
   @service capabilities;
 
   @tracked type = this.args.node.attrs.type;
