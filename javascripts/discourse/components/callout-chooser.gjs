@@ -1,6 +1,5 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { Input } from "@ember/component";
 import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
@@ -9,9 +8,12 @@ import { next } from "@ember/runloop";
 import { service } from "@ember/service";
 import { trustHTML } from "@ember/template";
 import DButton from "discourse/components/d-button";
+import DropdownMenu from "discourse/components/dropdown-menu";
+import TextField from "discourse/components/text-field";
 import DMenu from "discourse/float-kit/components/d-menu";
 import concatClass from "discourse/helpers/concat-class";
 import icon from "discourse/helpers/d-icon";
+import scrollIntoView from "discourse/modifiers/scroll-into-view";
 import { eq } from "discourse/truth-helpers";
 import { i18n } from "discourse-i18n";
 import iconOrSvg from "../helpers/icon-or-svg";
@@ -20,20 +22,10 @@ import { hexToRGBA } from "../lib/utils";
 export default class CalloutChooser extends Component {
   @service calloutSettings;
 
-  @tracked chooserFilter = "";
-  @tracked chooserHighlightedIndex = -1;
+  @tracked searchTerm = "";
+  @tracked selectedTypeIndex = -1;
 
-  chooserApi = null;
-
-  calloutColorStyle = (color) => {
-    const bg = hexToRGBA(
-      color || settings.callout_fallback_color,
-      settings.callout_background_opacity / 100
-    );
-    return trustHTML(
-      `--q-callout-background: ${bg}; --q-callout-color: ${color || settings.callout_fallback_color};`
-    );
-  };
+  menuApi = null;
 
   get icon() {
     const options = this.calloutSettings.find(this.args.value);
@@ -42,10 +34,11 @@ export default class CalloutChooser extends Component {
 
   get filteredCallouts() {
     const all = this.calloutSettings.all();
-    if (!this.chooserFilter) {
+    if (!this.searchTerm) {
       return all;
     }
-    const filter = this.chooserFilter.toLowerCase();
+
+    const filter = this.searchTerm.toLowerCase();
     return all.filter(
       (callout) =>
         callout.type.includes(filter) ||
@@ -53,47 +46,33 @@ export default class CalloutChooser extends Component {
     );
   }
 
-  scrollToView({ element, selector, block = "nearest" }) {
-    next(() => {
-      element
-        ?.querySelector(`.callout-chooser-row.${selector}`)
-        ?.scrollIntoView({ block });
-    });
-  }
-
   @action
   onRegisterApi(api) {
-    this.chooserApi = api;
+    this.menuApi = api;
   }
 
   @action
-  onFilterInput(event) {
-    this.chooserFilter = event.target.value;
-    this.chooserHighlightedIndex = -1;
+  search(event) {
+    this.searchTerm = event.target.value;
+    this.selectedTypeIndex = -1;
   }
 
   @action
-  onKeydown(event) {
+  handleKeydown(event) {
     const items = this.filteredCallouts;
-    const panel = event.target.closest(".callout-chooser-panel");
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      this.chooserHighlightedIndex = Math.min(
-        this.chooserHighlightedIndex + 1,
+      this.selectedTypeIndex = Math.min(
+        this.selectedTypeIndex + 1,
         items.length - 1
       );
-      this.scrollToView({ element: panel, selector: "is-highlighted" });
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      this.chooserHighlightedIndex = Math.max(
-        this.chooserHighlightedIndex - 1,
-        0
-      );
-      this.scrollToView({ element: panel, selector: "is-highlighted" });
+      this.selectedTypeIndex = Math.max(this.selectedTypeIndex - 1, 0);
     } else if (event.key === "Enter") {
       event.preventDefault();
-      const item = items[this.chooserHighlightedIndex];
+      const item = items[this.selectedTypeIndex];
       if (item) {
         this.selectType(item.type);
       }
@@ -101,40 +80,41 @@ export default class CalloutChooser extends Component {
   }
 
   @action
-  setChooserElement(element) {
-    this.chooserElement = element;
-  }
-
-  @action
-  focusInput(element) {
+  focus(element) {
+    this.selectedTypeIndex = -1;
     element.focus({ preventScroll: true });
   }
 
   @action
-  scrollToSelected(element) {
-    this.scrollToView({ element, selector: "is-selected", block: "center" });
-  }
-
-  @action
   onShow() {
-    const items = this.filteredCallouts;
-
-    this.chooserHighlightedIndex = items.findIndex(
-      (callout) => callout.type === this.args.value
-    );
+    next(() => {
+      this.selectedTypeIndex = this.filteredCallouts.findIndex(
+        (callout) => callout.type === this.args.value
+      );
+    });
   }
 
   @action
   selectType(type) {
-    this.chooserApi?.close();
+    this.menuApi?.close();
     this.args.onChange?.(type);
   }
 
   @action
   onClose() {
-    this.chooserFilter = "";
-    this.chooserHighlightedIndex = -1;
+    this.searchTerm = "";
+    this.selectedTypeIndex = -1;
     this.args.onClose?.();
+  }
+
+  calloutColorStyle(color) {
+    const bg = hexToRGBA(
+      color || settings.callout_fallback_color,
+      settings.callout_background_opacity / 100
+    );
+    return trustHTML(
+      `--q-callout-background: ${bg}; --q-callout-color: ${color || settings.callout_fallback_color};`
+    );
   }
 
   <template>
@@ -148,7 +128,7 @@ export default class CalloutChooser extends Component {
       @onClose={{this.onClose}}
       @onRegisterApi={{this.onRegisterApi}}
       @offset={{2}}
-      class="btn-transparent"
+      ...attributes
     >
       <:trigger>
         <span class="callout-icon">
@@ -157,39 +137,42 @@ export default class CalloutChooser extends Component {
       </:trigger>
       <:content>
         <div class="callout-chooser-panel">
-          <div class="callout-chooser-filter">
-            <Input
+          <div class="callout-chooser-search">
+            <TextField
+              autocomplete="off"
+              @placeholder={{i18n (themePrefix "composer.menu.search")}}
               @type="search"
-              @value={{this.chooserFilter}}
-              class="filter-input"
-              placeholder={{i18n (themePrefix "composer.menu.search")}}
-              {{on "input" this.onFilterInput}}
-              {{on "keydown" this.onKeydown}}
-              {{didInsert this.focusInput}}
+              {{on "input" this.search}}
+              {{on "keydown" this.handleKeydown}}
+              {{didInsert this.focus}}
+              @value={{readonly this.searchTerm}}
             />
             {{icon "magnifying-glass"}}
           </div>
-          <div class="callout-chooser-list" {{didInsert this.scrollToSelected}}>
+          <DropdownMenu class="callout-chooser-list" as |menu|>
             {{#each this.filteredCallouts as |callout index|}}
-              <DButton
-                class={{concatClass
-                  "callout-chooser-row"
-                  (if (eq callout.type @value) "is-selected")
-                  (if (eq index this.chooserHighlightedIndex) "is-highlighted")
-                }}
-                data-type={{callout.type}}
-                style={{this.calloutColorStyle callout.color}}
-                {{on "click" (fn this.selectType callout.type)}}
-              >
-                <span class="callout-chooser-row__icon">
-                  {{iconOrSvg callout.icon}}
-                </span>
-                <span class="callout-chooser-row__name">
-                  {{callout.title}}
-                </span>
-              </DButton>
+              <menu.item>
+                <DButton
+                  class={{concatClass
+                    "callout-chooser-row"
+                    (if (eq callout.type @value) "is-selected")
+                    (if (eq index this.selectedTypeIndex) "is-highlighted")
+                  }}
+                  data-type={{callout.type}}
+                  style={{this.calloutColorStyle callout.color}}
+                  @action={{fn this.selectType callout.type}}
+                  {{scrollIntoView (eq index this.selectedTypeIndex)}}
+                >
+                  <span class="callout-chooser-row__icon">
+                    {{iconOrSvg callout.icon}}
+                  </span>
+                  <span class="callout-chooser-row__name">
+                    {{callout.title}}
+                  </span>
+                </DButton>
+              </menu.item>
             {{/each}}
-          </div>
+          </DropdownMenu>
         </div>
       </:content>
     </DMenu>
