@@ -285,6 +285,37 @@ module(
         markdown
       );
     });
+
+    test("callout with emoji in custom title", async function (assert) {
+      const markdown = "> [!note] Hello :smile:\n> Content";
+      await testMarkdown(
+        assert,
+        markdown,
+        () => {
+          assert
+            .dom(".callout-title-inner img.emoji")
+            .exists("emoji image is rendered in the title");
+        },
+        markdown
+      );
+    });
+
+    test("callout with bold and emoji in custom title", async function (assert) {
+      const markdown = "> [!note] **Bold** :smile:\n> Content";
+      await testMarkdown(
+        assert,
+        markdown,
+        () => {
+          assert
+            .dom(".callout-title-inner strong")
+            .hasText("Bold", "bold text is rendered in the title");
+          assert
+            .dom(".callout-title-inner img.emoji")
+            .exists("emoji image is rendered after bold in the title");
+        },
+        markdown
+      );
+    });
   }
 );
 

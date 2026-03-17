@@ -66,7 +66,6 @@ export const nodeSpec = {
 
   callout_title: {
     content: "inline*",
-    marks: "_",
     defining: true,
     selectable: true,
     attrs: {
