@@ -81,7 +81,7 @@ class QuoteCallouts {
     if (this.hasChatContext) {
       api.decorateChatMessage(
         (element, helper) => {
-          this.processCookedElement(element, helper);
+          this.processCookedElement(element, helper, { isChat: true });
         },
         {
           id: "quote-callouts",
@@ -90,8 +90,8 @@ class QuoteCallouts {
     }
   }
 
-  processCookedElement(element, helper) {
-    const isPreview = !helper.model;
+  processCookedElement(element, helper, { isChat = false } = {}) {
+    const isPreview = !isChat && !helper.model;
     const calloutCounter = { value: 0 };
 
     for (const blockquote of element.querySelectorAll("blockquote")) {
