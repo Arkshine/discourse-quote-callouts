@@ -152,7 +152,7 @@ export default class Callout extends Component {
           <CalloutChooser
             @value={{readonly this.type}}
             @onChange={{this.onTypeChange}}
-            class="btn-flat"
+            class="btn-transparent"
           />
         {{else if this.icon}}
           <span class="callout-icon">
