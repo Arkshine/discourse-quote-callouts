@@ -1,4 +1,4 @@
-import { click, fillIn, visit } from "@ember/test-helpers";
+import { click, fillIn, triggerKeyEvent, visit } from "@ember/test-helpers";
 import { test } from "qunit";
 import { acceptance } from "discourse/tests/helpers/qunit-helpers";
 import selectKit from "discourse/tests/helpers/select-kit-helper";
@@ -1029,5 +1029,77 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".d-editor-preview .callout-chooser-trigger")
       .exists({ count: 1 }, "Only one chooser trigger for one callout");
+  });
+
+  test("callout chooser panel search filters the list", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+
+    assert
+      .dom(".callout-chooser-row")
+      .exists({ count: 7 }, "All callout types (including aliases) are shown");
+
+    await fillIn(".callout-chooser-search input", "exam");
+
+    assert
+      .dom(".callout-chooser-row")
+      .exists({ count: 1 }, "Only matching type is shown");
+    assert
+      .dom('.callout-chooser-row[data-type="example"]')
+      .exists("Example row is visible");
+  });
+
+  test("callout chooser panel keyboard navigation selects a type", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+
+    const searchInput = document.querySelector(".callout-chooser-search input");
+
+    await triggerKeyEvent(searchInput, "keydown", "ArrowDown");
+    assert
+      .dom(".callout-chooser-row.is-highlighted")
+      .exists("A row is highlighted");
+
+    await triggerKeyEvent(searchInput, "keydown", "Enter");
+
+    assert
+      .dom(".callout-chooser-row")
+      .doesNotExist("Chooser is closed after selection");
+  });
+
+  test("callout chooser panel highlights current type as selected", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+
+    assert
+      .dom('.callout-chooser-row[data-type="note"].is-selected')
+      .exists("Current callout type is marked as selected");
+    assert
+      .dom('.callout-chooser-row[data-type="warning"].is-selected')
+      .doesNotExist("Other types are not marked as selected");
+  });
+
+  test("callout chooser panel search is cleared on reopen", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+    await fillIn(".callout-chooser-search input", "exam");
+
+    assert
+      .dom(".callout-chooser-row")
+      .exists({ count: 1 }, "Search filters the list");
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+
+    assert.dom(".callout-chooser-panel").doesNotExist("Panel is closed");
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+
+    assert
+      .dom(".callout-chooser-row")
+      .exists({ count: 7 }, "All types are shown again after reopening");
   });
 });

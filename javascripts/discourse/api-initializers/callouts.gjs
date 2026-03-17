@@ -3,6 +3,7 @@ import { setOwner } from "@ember/owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
 import Callout from "../components/callout";
+import CalloutChooserPanel from "../components/callout-chooser-panel";
 import {
   CALLOUT_EXCERPT_REGEX,
   CALLOUT_REGEX,
@@ -87,6 +88,42 @@ class QuoteCallouts {
           id: "quote-callouts",
         }
       );
+
+      api.registerChatComposerButton?.({
+        id: "quote-callouts",
+        icon: "callout",
+        label: themePrefix("composer.insert_callout"),
+        position: "dropdown",
+        action() {
+          const identifier = "callout-chooser";
+          const trigger = document.querySelector(
+            ".chat-composer-dropdown__trigger-btn"
+          );
+
+          this.menu.show(trigger, {
+            identifier,
+            component: <template>
+              <CalloutChooserPanel
+                @onSelect={{@data.onSelect}}
+                @close={{@data.close}}
+              />
+            </template>,
+            data: {
+              onSelect: (type) => {
+                const markup = `> [!${type}]\n> `;
+                this.composer.textarea.addText(
+                  this.composer.textarea.getSelected(),
+                  markup
+                );
+                this.composer.focus();
+              },
+              close: () => {
+                this.menu.close(identifier);
+              },
+            },
+          });
+        },
+      });
     }
   }
 

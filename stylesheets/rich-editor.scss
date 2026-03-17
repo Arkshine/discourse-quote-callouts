@@ -230,7 +230,8 @@
   }
 }
 
-.callout-chooser-content {
+.callout-chooser-content,
+[data-identifier="callout-chooser"] .fk-d-menu__inner-content {
   z-index: z("mobile-composer");
 
   .fk-d-menu__inner-content {
