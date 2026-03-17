@@ -1,8 +1,4 @@
-import {
-  DEFAULT_CALLOUT_TYPE,
-  findCalloutOptions,
-  getCalloutSettings,
-} from "./config";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "./config";
 import { capitalizeFirstLetter } from "./utils";
 
 /**
@@ -116,7 +112,7 @@ export function inNode(state, nodeType, attrs = {}) {
  */
 export function buildCallout(schema, type, { title = "", bodyNodes } = {}) {
   let options = findCalloutOptions(type);
-  if (!options && getCalloutSettings()) {
+  if (!options) {
     type = DEFAULT_CALLOUT_TYPE;
     options = findCalloutOptions(type);
   }

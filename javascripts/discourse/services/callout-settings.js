@@ -1,67 +1,25 @@
 import Service from "@ember/service";
-import { setupCalloutSettings } from "../lib/config";
-import { capitalizeFirstLetter } from "../lib/utils";
+import {
+  findCalloutOptions,
+  getAllCallouts,
+  getAllCalloutTypes,
+  searchCallouts,
+} from "../lib/config";
 
 export default class CalloutSettings extends Service {
-  #data = [];
-
-  constructor() {
-    super(...arguments);
-    this.#data = this.#process();
-
-    // Static settings used in the prosemirror extension
-    setupCalloutSettings(this);
-  }
-
-  #process() {
-    const callouts = settings.callouts || [];
-    const entries = [];
-
-    for (const callout of callouts) {
-      const aliases = (callout.alias ?? "")
-        .split("|")
-        .map((alias) => alias.trim().toLowerCase())
-        .filter(Boolean);
-
-      const type = callout.type.trim().toLowerCase();
-
-      entries.push({
-        ...callout,
-        type,
-        name: type,
-        title: callout.title || capitalizeFirstLetter(type),
-      });
-
-      for (const alias of aliases) {
-        entries.push({
-          ...callout,
-          type: alias,
-          mainType: type,
-          name: alias,
-          title: callout.title || capitalizeFirstLetter(alias),
-        });
-      }
-    }
-
-    return entries;
-  }
-
   allTypes() {
-    return this.all().map((callout) => callout.type);
+    return getAllCalloutTypes();
   }
 
   all() {
-    return this.#data;
+    return getAllCallouts();
   }
 
   find(type) {
-    const lowerType = type?.toLowerCase();
-    return this.#data.find((callout) => callout.type === lowerType);
+    return findCalloutOptions(type);
   }
 
   search(term) {
-    return this.allTypes().filter((type) =>
-      type.startsWith(term.toLowerCase())
-    );
+    return searchCallouts(term);
   }
 }
