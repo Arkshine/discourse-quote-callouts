@@ -123,7 +123,7 @@ Each type comes with a different background color and icon.
 
 ### Icon
 
-You can use either [FontAwesome 6](https://fontawesome.com/v6/search?ic=free) icon or you can directly provide an SVG element.
+You can use either [FontAwesome](https://fontawesome.com/search?ic=free-collection) icon or you can directly provide an SVG element.
 
 #### SVG element
 
