@@ -11,6 +11,7 @@ import { trustHTML } from "@ember/template";
 import DButton from "discourse/components/d-button";
 import DMenu from "discourse/float-kit/components/d-menu";
 import concatClass from "discourse/helpers/concat-class";
+import icon from "discourse/helpers/d-icon";
 import { eq } from "discourse/truth-helpers";
 import { i18n } from "discourse-i18n";
 import iconOrSvg from "../helpers/icon-or-svg";
@@ -158,13 +159,15 @@ export default class CalloutChooser extends Component {
         <div class="callout-chooser-panel">
           <div class="callout-chooser-filter">
             <Input
-              @type="text"
+              @type="search"
               @value={{this.chooserFilter}}
+              class="filter-input"
               placeholder={{i18n (themePrefix "composer.menu.search")}}
               {{on "input" this.onFilterInput}}
               {{on "keydown" this.onKeydown}}
               {{didInsert this.focusInput}}
             />
+            {{icon "magnifying-glass"}}
           </div>
           <div class="callout-chooser-list" {{didInsert this.scrollToSelected}}>
             {{#each this.filteredCallouts as |callout index|}}
