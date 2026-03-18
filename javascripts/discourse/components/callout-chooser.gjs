@@ -22,13 +22,6 @@ export default class CalloutChooser extends Component {
   }
 
   @action
-  onShow() {
-    next(() => {
-      // Panel handles initial selection via @selectedType
-    });
-  }
-
-  @action
   onClose() {
     this.args.onClose?.();
   }
@@ -46,7 +39,6 @@ export default class CalloutChooser extends Component {
       @contentClass="callout-chooser-content"
       @placement="bottom-start"
       @disabled={{@disabled}}
-      @onShow={{this.onShow}}
       @onClose={{this.onClose}}
       @onRegisterApi={{this.onRegisterApi}}
       @offset={{2}}
