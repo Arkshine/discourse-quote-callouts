@@ -1,4 +1,8 @@
-import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
+import {
+  CALLOUT_MARKER_REGEX,
+  DEFAULT_CALLOUT_TYPE,
+  findCalloutOptions,
+} from "../config";
 import { findAncestor } from "../rich-editor-utils";
 import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../utils";
 import {
@@ -12,6 +16,8 @@ import { transformFragmentsToCallouts } from "./paste-handler";
 export function plugins({
   pmState: { Plugin, TextSelection, PluginKey },
   pmView: { Decoration, DecorationSet },
+  pmModel: { Fragment, Slice },
+  utils: { convertFromMarkdown },
   getContext,
 }) {
   const calloutPlugin = new Plugin({
@@ -53,6 +59,26 @@ export function plugins({
         });
 
         return DecorationSet.create(doc, decos);
+      },
+
+      handlePaste(view, event) {
+        const clipboard = event.clipboardData;
+        const hasHtml = clipboard?.types?.includes("text/html");
+        const plainText = clipboard?.getData("text/plain");
+
+        // When both HTML and plain text are present ProseMirror prefers the HTML
+        // which often contains syntax-highlighted elements rather than
+        // markdown structure. If the plain text contains callout markers, re-parse
+        // it as markdown so callouts are created correctly.
+        if (hasHtml && plainText && CALLOUT_MARKER_REGEX.test(plainText)) {
+          const doc = convertFromMarkdown(plainText);
+          const slice = Slice.maxOpen(Fragment.from(doc.content));
+          const tr = view.state.tr.replaceSelection(slice);
+          view.dispatch(tr);
+          return true;
+        }
+
+        return false;
       },
 
       transformPasted(slice, view) {

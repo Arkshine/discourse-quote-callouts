@@ -3,6 +3,15 @@ import CalloutTitleNodeView from "../../components/callout-title-node-view";
 import GlimmerNodeView from "../../lib/glimmer-node-view";
 import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
 
+// TODO: Get rid of a custom glimmer-node-view with this syntax?
+//
+// nodeViews: {
+//   callout: {
+//     component: CalloutNodeView,
+//     hasContent: true,
+//   },
+// },
+
 const calloutNodeView =
   ({ getContext }) =>
   (node, view, getPos) => {
