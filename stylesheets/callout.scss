@@ -1,0 +1,149 @@
+@use "sass:color";
+@use "sass:map";
+@import "functions";
+
+@mixin apply-if-not-empty($property, $value) {
+  @if $value and $value != "" {
+    #{$property}: #{$value};
+  }
+}
+
+.rtl {
+  --q-callout-fold-direction: -1;
+}
+
+.callout {
+  padding: $callout_padding;
+  border-radius: $callout_border_radius;
+  border-left: 0;
+  position: relative;
+  background-color: var(--q-callout-background);
+
+  @include apply-if-not-empty(border-width, $callout_border_width);
+  @include apply-if-not-empty(border-style, $callout_border_style);
+  @include apply-if-not-empty(border-color, $callout_border_color);
+
+  & > *:last-child {
+    margin-bottom: revert !important;
+  }
+
+  &.is-collapsible > .callout-title {
+    cursor: pointer;
+  }
+
+  .callout-title {
+    display: flex;
+    align-items: center;
+    gap: $callout_title_gap;
+    font-size: $callout_title_font_size;
+    font-weight: $callout_title_font_weight;
+
+    > .callout-title-inner {
+      flex: 1;
+
+      .emoji {
+        vertical-align: middle;
+      }
+    }
+
+    a {
+      text-decoration: underline;
+    }
+
+    > .callout-fold {
+      padding-inline-end: 8px;
+      display: flex;
+
+      > .svg-icon {
+        transform: scale(0.8);
+        transition: transform #{$callout_transition_duration_ms}ms ease-in-out;
+      }
+
+      &.is-collapsed > .svg-icon {
+        transform: scale(0.8)
+          rotate(calc(var(--q-callout-fold-direction, 1) * -1 * 90deg));
+      }
+    }
+  }
+
+  > .callout-content {
+    &.can-interpolate-size {
+      interpolate-size: allow-keywords;
+    }
+    padding-block: 0.05px; // Prevents first/last child margin collapsing
+    overflow-y: visible;
+    transition: height #{$callout_transition_duration_ms}ms
+      cubic-bezier(0.02, 0.01, 0.47, 1);
+    height: auto;
+
+    &.is-clipped {
+      overflow-y: clip;
+    }
+  }
+
+  &.is-collapsed > .callout-content {
+    overflow-y: clip;
+    height: 0;
+  }
+
+  > .callout-icon {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+
+    svg {
+      width: $callout_icon_size;
+      height: $callout_icon_size;
+    }
+  }
+
+  .lucide {
+    width: 1em;
+    height: 1em;
+    line-height: 1;
+    display: inline-flex;
+    position: relative;
+  }
+
+  $parsedSettings: parse-object-settings($callouts);
+
+  @each $map in $parsedSettings {
+    $type: map.get($map, "type");
+    $color: map.get($map, "color");
+    $border_width: map.get($map, "border_width");
+    $border_style: map.get($map, "border_style");
+    $border_color: map.get($map, "border_color");
+    $border_radius: map.get($map, "border_radius");
+    $icon_size: map.get($map, "icon_size");
+
+    &[data-callout-type="#{$type}"] {
+      @include apply-if-not-empty(border-width, $border_width);
+      @include apply-if-not-empty(border-style, $border_style);
+      @include apply-if-not-empty(border-color, $border_color);
+      @include apply-if-not-empty(border-radius, $border_radius);
+
+      > .callout-title:not(.callout-controls) {
+        .callout-title-inner,
+        .callout-title-inner *,
+        .callout-fold {
+          color: #{$color};
+        }
+
+        > .callout-icon svg {
+          color: #{$color};
+
+          @include apply-if-not-empty(width, $icon_size);
+          @include apply-if-not-empty(height, $icon_size);
+        }
+      }
+    }
+  }
+}
+
+:not(.--rich-editor-enabled) .callout-chooser-trigger {
+  padding: 0;
+
+  .callout-icon svg {
+    color: var(--q-callout-color);
+  }
+}

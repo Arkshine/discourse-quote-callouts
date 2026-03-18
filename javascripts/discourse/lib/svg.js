@@ -95,10 +95,8 @@ export function createSafeSVG(svgString, size = 16) {
   if (svgElement && svgElement instanceof SVGSVGElement) {
     svgElement.setAttribute("width", `${size}`);
     svgElement.setAttribute("height", `${size}`);
-    //svgElement.setAttribute("fill", "currentColor");
-    //svgElement.setAttribute("stroke", "currentColor");
-    return svgElement;
+    return svgElement.outerHTML;
   }
 
-  return null;
+  return "";
 }

@@ -1,0 +1,105 @@
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
+import { plugins } from "./plugins";
+
+export const nodeSpec = {
+  callout: {
+    group: "block",
+    content: "callout_title callout_body",
+    defining: true,
+    createGapCursor: true,
+    selectable: true,
+    draggable: true,
+    attrs: {
+      type: { default: DEFAULT_CALLOUT_TYPE },
+      title: { default: "" },
+      fold: { default: "" },
+      isCollapsed: { default: false },
+      isCollapsible: { default: false },
+      hasBody: { default: false },
+      hasCustomTitle: { default: false },
+    },
+    toDOM(node) {
+      const { type, fold, isCollapsed, isCollapsible } = node.attrs;
+      const classes = ["callout"];
+
+      if (fold !== "") {
+        if (isCollapsed) {
+          classes.push("is-collapsed");
+        }
+
+        if (isCollapsible) {
+          classes.push("is-collapsible");
+        }
+      }
+
+      return [
+        "blockquote",
+        { class: classes.join(" "), "data-callout-type": type },
+        0,
+      ];
+    },
+    parseDOM: [
+      {
+        tag: "blockquote.callout",
+        getAttrs(dom) {
+          let type = dom.getAttribute("data-callout-type");
+
+          const title =
+            dom.querySelector(".callout-title-inner")?.textContent.trim() || "";
+
+          const fold = dom.classList.contains("is-collapsible")
+            ? dom.classList.contains("is-collapsed")
+              ? "-"
+              : "+"
+            : "";
+
+          const options = findCalloutOptions(type);
+          const defaultTitle =
+            (options && (options.title || options.label)) || "";
+          const hasCustomTitle = title.length > 0 && title !== defaultTitle;
+
+          return { type, title, fold, hasCustomTitle };
+        },
+      },
+    ],
+  },
+
+  callout_title: {
+    content: "inline*",
+    defining: true,
+    selectable: true,
+    attrs: {
+      type: { default: DEFAULT_CALLOUT_TYPE },
+      fold: { default: "" },
+      isCollapsed: { default: false },
+      isCollapsible: { default: false },
+      hasBody: { default: false },
+    },
+    toDOM() {
+      return [
+        "div",
+        { class: "callout-title" },
+        ["span", { class: "callout-title-inner" }, 0],
+      ];
+    },
+    parseDOM: [
+      {
+        tag: "div.callout-title",
+        contentElement: "span.callout-title-inner",
+      },
+    ],
+  },
+
+  callout_body: {
+    content: "block*",
+    defining: true,
+    selectable: false,
+    createGapCursor: true,
+    toDOM() {
+      return ["div", { class: "callout-content" }, 0];
+    },
+    parseDOM: [{ tag: "div.callout-content" }],
+  },
+
+  plugins,
+};

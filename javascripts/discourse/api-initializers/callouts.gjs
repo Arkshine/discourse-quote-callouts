@@ -1,343 +1,257 @@
-import { action } from "@ember/object";
+import { computed } from "@ember/object";
 import { setOwner } from "@ember/owner";
-import discourseComputed from "discourse/lib/decorators";
-import { iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
-import { createSafeSVG } from "../lib/svg";
-import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../lib/utils";
-
-const CALLOUT_REGEX =
-  /^\[!(?<callout>[^\]]+)\](?<fold>[+-])? *?(?<title>.*) *?/;
-const CALLOUT_EXCERPT_REGEX = new RegExp(`\\[!\\w+\\][+-]? *`, "gmi");
+import { i18n } from "discourse-i18n";
+import Callout from "../components/callout";
+import CalloutChooserPanel from "../components/callout-chooser-panel";
+import {
+  CALLOUT_EXCERPT_REGEX,
+  CALLOUT_REGEX,
+  DEFAULT_CALLOUT_TYPE,
+} from "../lib/config";
+import richEditorExtension from "../lib/rich-editor-extension/index";
+import {
+  collectNodesUntil,
+  firstMeaningfulNode,
+  isNodeEmpty,
+  leadingTextFromNode,
+} from "../lib/utils";
 
 class QuoteCallouts {
   constructor(owner, api) {
     setOwner(this, owner);
-
+    this.api = api;
     this.hasChatContext = !!api.decorateChatMessage;
-    this.callouts = this.processCalloutSettings();
+
+    api.registerRichEditorExtension(richEditorExtension);
+
+    window.I18n.translations[window.I18n.locale].js.composer.callout_sample =
+      ``;
+    api.addComposerToolbarPopupMenuOption({
+      action: (toolbarEvent) => {
+        const defaultType = DEFAULT_CALLOUT_TYPE;
+        if (toolbarEvent.commands) {
+          toolbarEvent.commands.insertCallout(defaultType);
+        } else {
+          toolbarEvent.applySurround(
+            `> [!${defaultType}]\n> `,
+            " ",
+            "callout_sample"
+          );
+        }
+      },
+      icon: "callout",
+      label: themePrefix("composer.callout"),
+      shortcut: "q",
+    });
+
+    // Add callout to keyboard shortcuts help modal
+    // TODO: Remove this if core generates the list later.
+    api.modifyClass("component:modal/keyboard-shortcuts-help", (Superclass) => {
+      return class extends Superclass {
+        get shortcuts() {
+          const shortcuts = super.shortcuts;
+          if (!shortcuts?.composing?.shortcuts) {
+            return shortcuts;
+          }
+
+          shortcuts.composing.shortcuts.callout = `
+            <span class="delimiter-or" dir="ltr">
+              <kbd>Ctrl</kbd>
+              <kbd>q</kbd>
+            </span>
+            ${i18n(themePrefix("composer.insert_callout"))}`;
+          return shortcuts;
+        }
+      };
+    });
 
     api.modifyClass("model:topic", (Superclass) => {
       return class extends Superclass {
-        @discourseComputed("excerpt")
-        escapedExcerpt() {
+        @computed("excerpt")
+        get escapedExcerpt() {
           return super.escapedExcerpt?.replace(CALLOUT_EXCERPT_REGEX, "");
         }
       };
     });
 
-    api.decorateCookedElement((element) => {
-      const cleanups = [];
-
-      element.querySelectorAll("blockquote").forEach((blockquote) => {
-        const firstElement = blockquote?.firstElementChild;
-
-        if (
-          !firstElement ||
-          firstElement.tagName === "BLOCKQUOTE" ||
-          (firstElement.tagName === "ASIDE" &&
-            firstElement.classList.contains("quote"))
-        ) {
-          // Nested quotes
-          return;
-        }
-
-        const cleanup = this.processBlockquotes(blockquote);
-        if (cleanup) {
-          cleanups.push(cleanup);
-        }
-      });
-
-      return () => {
-        cleanups.forEach((fn) => fn());
-      };
+    api.decorateCookedElement((cooked, helper) => {
+      this.processCookedElement(cooked, helper);
     });
 
     if (this.hasChatContext) {
       api.decorateChatMessage(
-        (element) => {
-          element.querySelectorAll("blockquote").forEach((blockquote) => {
-            this.processBlockquotes(blockquote);
-          });
+        (element, helper) => {
+          this.processCookedElement(element, helper, { isChat: true });
         },
         {
           id: "quote-callouts",
         }
       );
 
-      api.modifyClass("component:chat-message", (Superclass) => {
-        return class extends Superclass {
-          @action
-          willDestroyMessage() {
-            super.willDestroyMessage(...arguments);
+      api.registerChatComposerButton?.({
+        id: "quote-callouts",
+        icon: "callout",
+        label: themePrefix("composer.insert_callout"),
+        position: "dropdown",
+        action() {
+          const identifier = "callout-chooser";
+          const trigger = document.querySelector(
+            ".chat-composer-dropdown__trigger-btn"
+          );
 
-            this.messageContainer
-              ?.querySelectorAll(".callout-title")
-              .forEach((element) => {
-                if (element._calloutHandler) {
-                  element.removeEventListener("click", element._calloutHandler);
-                  delete element._calloutHandler;
-                }
-              });
-          }
-        };
+          this.menu.show(trigger, {
+            identifier,
+            component: <template>
+              <CalloutChooserPanel
+                @onSelect={{@data.onSelect}}
+                @close={{@data.close}}
+              />
+            </template>,
+            data: {
+              onSelect: (type) => {
+                const markup = `> [!${type}]\n> `;
+                this.composer.textarea.addText(
+                  this.composer.textarea.getSelected(),
+                  markup
+                );
+                this.composer.focus();
+              },
+              close: () => {
+                this.menu.close(identifier);
+              },
+            },
+          });
+        },
       });
     }
   }
 
-  processCalloutSettings() {
-    return settings.callouts.map((setting) => {
-      if (setting.alias) {
-        setting.type = [
-          setting.type,
-          ...setting.alias
-            .split("|")
-            .map((alias) => alias.trim())
-            .filter(Boolean),
-        ];
-      } else {
-        setting.type = [setting.type];
+  processCookedElement(element, helper, { isChat = false } = {}) {
+    const isPreview = !isChat && !helper.model;
+    const calloutCounter = { value: 0 };
+
+    for (const blockquote of element.querySelectorAll("blockquote")) {
+      // Skip if already processed (replaced with container)
+      if (!blockquote.parentElement) {
+        continue;
       }
 
-      return setting;
-    });
+      const calloutTrees = this.parseHeaders(blockquote);
+      if (!calloutTrees?.isCallout) {
+        continue;
+      }
+
+      if (isPreview) {
+        this.assignPreviewMetadata(calloutTrees, calloutCounter);
+      }
+
+      const { root } = calloutTrees;
+      const container = document.createElement("div");
+
+      root.replaceWith(container);
+      helper.renderGlimmer(container, Callout, { ...calloutTrees });
+    }
   }
 
-  findCalloutSetting(type) {
-    return this.callouts.find((callout) => callout.type.includes(type));
-  }
-
-  processBlockquotes(blockquote) {
-    const firstParagraph = blockquote.querySelector("p");
-    if (!firstParagraph) {
-      return;
+  parseHeaders(blockquoteElement) {
+    // First element must be a paragraph
+    const firstParagraph = blockquoteElement?.firstElementChild;
+    if (!firstParagraph || firstParagraph.tagName !== "P") {
+      return null;
     }
 
-    // > [!note] This is a note
-    // First child can be only a #TEXT.
-    const firstChild = firstParagraph?.firstChild;
-    if (!firstChild || firstChild.nodeType !== Node.TEXT_NODE) {
-      return;
+    // Ignore leading whitespace.
+    // Allow a single inline wrapper around the marker (like accidental strong or em).
+    const first = firstMeaningfulNode(firstParagraph);
+    const leading = leadingTextFromNode(first);
+
+    if (!leading) {
+      return null;
     }
 
-    // [!<callout>]<fold>? <title>?
-    const match = firstChild.textContent.match(CALLOUT_REGEX);
-    if (!match || !match.groups?.callout) {
-      return;
+    // Matches [!<callout>]<fold>? <title>?
+    const match = leading.match(CALLOUT_REGEX);
+    if (!match) {
+      return null;
     }
 
-    const fold = match.groups?.fold || "";
+    const type = match.groups.callout.toLowerCase() || DEFAULT_CALLOUT_TYPE;
+    const fold = match.groups.fold || "";
+    const title = match.groups.title?.trim() || "";
 
-    let calloutType = match.groups.callout.toLowerCase();
-    let calloutIcon;
-
-    // Remove the callout from the text
-    firstChild.nodeValue = firstChild.nodeValue
-      .replace(`[!${match.groups.callout}]${fold}`, "")
+    // Strips the marker from the content
+    firstParagraph.innerHTML = firstParagraph.innerHTML
+      .replace(match.groups.marker, "")
       .trimLeft();
 
-    const setting = this.findCalloutSetting(calloutType);
+    // Supports inline element such as date in the title
+    // Loops through the nodes until a newline appears
+    const { nodes: titleNodes, hasInline: titleHasInline } =
+      this.collectTitleNodes(firstParagraph);
 
-    if (!setting) {
-      calloutType = settings.callout_fallback_type || "note";
-      calloutIcon = settings.callout_fallback_icon || "pencil";
-    } else {
-      calloutIcon = setting.icon;
+    // Single callout without content
+    if (isNodeEmpty(firstParagraph)) {
+      firstParagraph.remove();
     }
 
-    // Do we have a title, either text or element (excluding newline)?
-    const hasCustomTitle =
-      !!match.groups?.title?.trim() ||
-      (firstChild.nextSibling?.nodeType === Node.ELEMENT_NODE &&
-        firstChild.nextSibling?.tagName !== "BR");
-
-    let title;
-
-    if (hasCustomTitle) {
-      const nodes = Array.from(firstParagraph.childNodes);
-      const result = [];
-
-      // Retrieves all nodes after the callout until a newline appears
-      for (const node of nodes) {
-        if (
-          node.nodeName === "BR" ||
-          (node.nodeType === Node.TEXT_NODE &&
-            node.textContent.startsWith("\n"))
-        ) {
-          break;
+    // Check recursively blockquotes, treat others as content
+    const children = Array.from(blockquoteElement.children).map((child) => {
+      if (child.tagName === "BLOCKQUOTE") {
+        const parsed = this.parseHeaders(child);
+        if (parsed) {
+          return parsed;
         }
-
-        result.push(node);
       }
+      return { content: child, isCallout: false };
+    });
 
-      title = result.length ? result : null;
-    }
-
-    if (!title) {
-      title = setting?.title || capitalizeFirstLetter(calloutType);
-    }
-
-    const titleRow = this.createTitleRow(calloutIcon, title, fold);
-
-    this.cleanupParagraph(firstParagraph);
-
-    blockquote.prepend(titleRow);
-    blockquote.dataset.calloutType = calloutType;
-    blockquote.classList.add("callout");
-
-    blockquote.style.backgroundColor = hexToRGBA(
-      setting?.color || settings.callout_fallback_color,
-      settings.callout_background_opacity / 100
-    );
-
-    this.createContentRow(blockquote, titleRow, fold);
-
-    return this.bindFoldEvents(blockquote);
-  }
-
-  bindFoldEvents(blockquote) {
-    if (!blockquote.classList.contains("is-collapsible")) {
-      return;
-    }
-
-    const titleRow = blockquote.querySelector(".callout-title");
-    const content = blockquote.querySelector(".callout-content");
-
-    if (!titleRow || !content) {
-      return;
-    }
-
-    const handleClick = () => {
-      const isCollapsing = !blockquote.classList.contains("is-collapsed");
-      const foldSpan = titleRow.querySelector(".callout-fold");
-
-      content.removeAttribute("style");
-      content.style.overflowY = "clip";
-      content.style.height = content.scrollHeight + "px";
-
-      if (isCollapsing) {
-        content.style.height = content.scrollHeight + "px";
-        content.offsetHeight; // reflow
-        content.style.height = "0px";
-      }
-
-      blockquote.classList.toggle("is-collapsed");
-      if (foldSpan) {
-        foldSpan.classList.toggle("is-collapsed");
-      }
-
-      content.addEventListener(
-        "transitionend",
-        () => {
-          content.style = blockquote.classList.contains("is-collapsed")
-            ? "display: none"
-            : "";
-        },
-        { once: true }
-      );
-    };
-
-    if (this.hasChatContext) {
-      titleRow._calloutHandler = handleClick;
-    }
-
-    titleRow.addEventListener("click", handleClick);
-
-    return () => {
-      titleRow.removeEventListener("click", handleClick);
+    return {
+      root: blockquoteElement,
+      isCallout: true,
+      type,
+      title: {
+        text: title,
+        nodes: titleNodes,
+        hasInline: titleHasInline,
+      },
+      fold,
+      children,
     };
   }
 
-  createTitleRow(icon, title, fold) {
-    const titleRow = document.createElement("div");
-    titleRow.classList.add("callout-title");
+  assignPreviewMetadata(calloutData, counter) {
+    calloutData.isPreview = true;
+    calloutData.calloutIndex = counter.value++;
 
-    if (icon) {
-      let svg;
-
-      const iconSpan = document.createElement("span");
-      iconSpan.classList.add("callout-icon");
-
-      if (icon.startsWith("<svg")) {
-        svg = createSafeSVG(icon);
-
-        if (svg) {
-          iconSpan.appendChild(svg);
-        } else {
-          icon = "pencil";
+    if (calloutData.children) {
+      for (const child of calloutData.children) {
+        if (child.isCallout) {
+          this.assignPreviewMetadata(child, counter);
         }
       }
-
-      if (!svg) {
-        iconSpan.innerHTML = iconHTML(icon);
-      }
-
-      titleRow.appendChild(iconSpan);
     }
-
-    if (title) {
-      const titleSpan = document.createElement("span");
-      titleSpan.classList.add("callout-title-inner");
-
-      if (typeof title === "string") {
-        titleSpan.textContent = title;
-      } else {
-        titleSpan.append(...title);
-      }
-      titleRow.appendChild(titleSpan);
-    }
-
-    if (fold) {
-      const foldSpan = document.createElement("span");
-      foldSpan.classList.add("callout-fold");
-      if (fold === "-") {
-        foldSpan.classList.add("is-collapsed");
-      }
-
-      foldSpan.innerHTML = iconHTML("chevron-down");
-      titleRow.appendChild(foldSpan);
-    }
-
-    return titleRow;
   }
 
-  createContentRow(blockquote, titleRow, fold) {
-    const contents = Array.from(blockquote.children).filter(
-      (node) => node !== titleRow
+  collectTitleNodes(paragraphEl) {
+    const nodes = collectNodesUntil(
+      paragraphEl,
+      (node) =>
+        node.nodeName === "BR" ||
+        (node.nodeType === Node.TEXT_NODE && node.textContent.startsWith("\n")),
+      {
+        onStop: (node) => node.remove(),
+      }
     );
+    const hasInline = nodes.some((node) => node.nodeType === Node.ELEMENT_NODE);
 
-    if (contents.length) {
-      const contentContainer = document.createElement("div");
-      contentContainer.className = "callout-content";
-      contentContainer.append(...contents);
+    // Detach nodes from the DOM
+    nodes.forEach((node) => node.remove());
 
-      blockquote.appendChild(contentContainer);
-
-      if (fold) {
-        blockquote.classList.add("is-collapsible");
-
-        if (fold === "-") {
-          blockquote.classList.add("is-collapsed");
-        }
-      }
-    } else if (fold) {
-      titleRow.querySelector(".callout-fold")?.remove();
-    }
-  }
-
-  cleanupParagraph(paragraph) {
-    const firstParagraphChild = paragraph?.firstElementChild;
-    if (
-      firstParagraphChild &&
-      (firstParagraphChild.tagName === "BR" ||
-        !firstParagraphChild.textContent.trim())
-    ) {
-      firstParagraphChild.remove();
-    }
-
-    if (isNodeEmpty(paragraph)) {
-      paragraph.remove();
-    }
+    return {
+      nodes,
+      hasInline,
+    };
   }
 }
 

@@ -119,11 +119,91 @@ Each type comes with a different background color and icon.
 ![Callout types examples 1](./.github/images/types_1.png)
 ![Callout types examples 2](./.github/images/types_2.png)
 
+## Rich text editor
+
+You can use the rich text editor to create callouts.
+
+### Creating callouts:
+
+You have four ways to insert callouts:
+
+- Keyboard shortcut
+- Toolbar
+- Input rules
+  - `/callout<:type> `
+  - `!!<type> `
+- Paste support
+
+    <details>
+    <summary>Video</summary>
+
+  ![callout_creation|video](./.github/videos/callout_control_1.mp4)
+
+    </details>
+
+### Editing callouts
+
+The controls to edit a callout appear only when you select it before.
+
+- **Type chooser**
+  By clicking on the icon, a floating menu will appear.
+- **Custom Title**
+  Supports inline formatting and emoji
+- **Folding**
+  Set callouts as collapsible. It can be accessed from the options menu.
+
+<details>
+<summary>Video</summary>
+
+![callout_control_1|video](./.github/videos/callout_control_1.mp4)
+
+</details>
+
+### Organizing callouts
+
+- **Move controls**
+  - _Desktop_
+    There is a handle that you grab to drag and drop the callout.
+  - _Touch device_
+    You move callouts up/down or nest them into adjacent callouts. It’s disabled by default to avoid bloat in the view, since that’s not something you will do often. You can toggle in the options.
+
+      <details>
+      <summary>Video</summary>
+
+    ![callout_control_2|video](./.github/videos/callout_control_2.mp4)
+
+      </details>
+
+- **Keyboard navigation**
+  This helps make it easier to move in and out of nested callouts.
+  It might require some future adjustments to make the behavior consistent in this version.
+  - <kbd>←</kbd> At the start of the title, the callout chooser will open automatically.
+  - <kbd> ↑</kbd> <kbd> ↓</kbd> Inside a callout body with no paragraph to land on, it will create one; if you exit with empty content, the paragraph is removed.
+  - <kbd>Enter</kbd> inside the title moves the cursor into the body (and creates one if necessary).
+
+    <details>
+    <summary>Video</summary>
+
+    ![keyboard|video](./.github/videos/keyboard.mp4)
+
+    </details>
+
+- **Click-to-insert**
+  - In areas where there is no paragraph, you can click inside to open a paragraph.
+  - If you prefer, you can also use buttons to open a paragraph inside or outside a callout.
+
+    <details>
+    <summary>Video</summary>
+
+    ![click|video](./.github/videos/click.mp4)
+
+    </details>
+
 ## Customization
 
 ### Icon
 
-You can use either [FontAwesome 6](https://fontawesome.com/v6/search?ic=free) icon or you can directly provide an SVG element.
+You can use either [FontAwesome](https://fontawesome.com/search?ic=free-collection) icon or you can directly provide an SVG element.
 
 #### SVG element
 
@@ -181,23 +261,24 @@ See the Settings section below.
 
 ## Settings
 
-| Setting                        | Description                                                                                                        |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| **callouts**                   | Define the callouts.                                                                                               |
-| **callout_fallback_type**      | The default callout type to use when the specified type is not found.<br><small>Default value: `note`</small>      |
-| **callout_fallback_icon**      | The default icon to use when the specified type is not found.<br><small>Default value: `far-pen-to-square`</small> |
-| **callout_fallback_color**     | The default color to use when the specified type is not found.<br><small>Default value: `#027aff`</small>          |
-| **callout_background_opacity** | The global background opacity for the callout (1 to 100).<br><small>Default value: `10`</small>                    |
-| **callout_border_width**       | The global border width for the callout.<br><small>Default value: `empty`</small>                                  |
-| **callout_border_style**       | The global border style for the callout.<br><small>Default value: `empty`</small>                                  |
-| **callout_border_color**       | The global border color for the callout.<br><small>Default value: `empty`</small>                                  |
-| **callout_border_radius**      | The global border radius for the callout.<br><small>Default value: `var(--d-border-radius)`</small>                |
-| **callout_padding**            | The global padding for the callout.<br><small>Default value: `0.75em 0.75em 0.75em 1.5em`</small>                  |
-| **callout_title_font_size**    | The global font size for the callout title.<br><small>Default value: `inherit`</small>                             |
-| **callout_title_font_weight**  | The global font weight for the callout title.<br><small>Default value: `bold`</small>                              |
-| **callout_title_gap**          | The global gap between the callout icon and title.<br><small>Default value: `0.5em`</small>                        |
-| **callout_icon_sizep**         | The global size for the callout icon.                                                                              |
-| **svg_icons**                  | List of FontAwesome 6 icons used in this theme component.                                                          |
+| Setting                            | Description                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **callouts**                       | Define the callouts.                                                                                               |
+| **callout_fallback_type**          | The default callout type to use when the specified type is not found.<br><small>Default value: `note`</small>      |
+| **callout_fallback_icon**          | The default icon to use when the specified type is not found.<br><small>Default value: `far-pen-to-square`</small> |
+| **callout_fallback_color**         | The default color to use when the specified type is not found.<br><small>Default value: `#027aff`</small>          |
+| **callout_background_opacity**     | The global background opacity for the callout (1 to 100).<br><small>Default value: `10`</small>                    |
+| **callout_border_width**           | The global border width for the callout.<br><small>Default value: `empty`</small>                                  |
+| **callout_border_style**           | The global border style for the callout.<br><small>Default value: `empty`</small>                                  |
+| **callout_border_color**           | The global border color for the callout.<br><small>Default value: `empty`</small>                                  |
+| **callout_border_radius**          | The global border radius for the callout.<br><small>Default value: `var(--d-border-radius)`</small>                |
+| **callout_padding**                | The global padding for the callout.<br><small>Default value: `0.75em 0.75em 0.75em 1.5em`</small>                  |
+| **callout_title_font_size**        | The global font size for the callout title.<br><small>Default value: `inherit`</small>                             |
+| **callout_title_font_weight**      | The global font weight for the callout title.<br><small>Default value: `bold`</small>                              |
+| **callout_title_gap**              | The global gap between the callout icon and title.<br><small>Default value: `0.5em`</small>                        |
+| **callout_icon_sizep**             | The global size for the callout icon.<br><small>Default value: `empty`</small>                                     |
+| **callout_transition_duration_ms** | The duration of the open and close animation (ms).<br><small>Default value: `100`</small>                          |
+| **svg_icons**                      | List of FontAwesome 6 icons used in this theme component.                                                          |
 
 Per-callout setting page:
 
@@ -220,12 +301,10 @@ Per-callout setting page:
 
 Future development plans may include:
 
-- Autocomplete types on typing
+- ~~Rich text editor support~~
+- Input rules autocompletion
+- Improve color consistency and visibility, especially for dark mode
 
 ## Credits
 
 - @StefanoCecere -- Feature request, https://meta.discourse.org/t/style-blockquotes-as-callouts-in-obsidian/350045
-
-```
-
-```
