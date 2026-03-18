@@ -108,7 +108,14 @@ export function handleArrowDown({
     const parentNode = $from.node(calloutAncestor.depth - 1);
 
     if (index + 1 === parentNode.childCount) {
-      const afterPos = calloutAncestor.pos + calloutAncestor.node.nodeSize;
+      const afterPara = $from.after($from.depth);
+      const calloutEnd = calloutAncestor.pos + calloutAncestor.node.nodeSize;
+
+      if (calloutEnd - afterPara > 2) {
+        return false;
+      }
+
+      const afterPos = calloutEnd;
       const tr = state.tr.insert(afterPos, schema.nodes.paragraph.create());
 
       tr.setMeta("callout:keyboardNav", true);
@@ -151,11 +158,36 @@ export function handleArrowUp({
         const lastBodyChild = body.lastChild;
 
         if (!lastBodyChild || lastBodyChild.type === schema.nodes.callout) {
-          // Insert a ¶ at the end of the callout's body
           const bodyEnd = $from.before($from.depth) - 2;
+          const tr = state.tr;
+          const isOnEmptyPara =
+            $from.parent.type === schema.nodes.paragraph &&
+            $from.parent.content.size === 0;
 
-          const tr = state.tr.insert(bodyEnd, schema.nodes.paragraph.create());
+          if (isOnEmptyPara) {
+            tr.delete($from.before($from.depth), $from.after($from.depth));
+          }
+
+          tr.insert(bodyEnd, schema.nodes.paragraph.create());
           tr.setSelection(TextSelection.create(tr.doc, bodyEnd + 1));
+          dispatch(tr.scrollIntoView());
+          return true;
+        }
+
+        // Body ends with a regular block (e.g. paragraph with text):
+        // move cursor to the end of that block instead of creating a new one.
+        if (lastBodyChild) {
+          const tr = state.tr;
+          const isOnEmptyPara =
+            $from.parent.type === schema.nodes.paragraph &&
+            $from.parent.content.size === 0;
+
+          if (isOnEmptyPara) {
+            tr.delete($from.before($from.depth), $from.after($from.depth));
+          }
+
+          const endOfBody = $from.before($from.depth) - 1;
+          tr.setSelection(TextSelection.near(tr.doc.resolve(endOfBody), -1));
           dispatch(tr.scrollIntoView());
           return true;
         }
@@ -185,40 +217,30 @@ export function handleArrowUp({
       const prevNode = parentNode.child(index - 1);
 
       if (prevNode.type === schema.nodes.callout) {
-        let allCalloutsAbove = true;
-        for (let i = 0; i < index; i++) {
-          if (parentNode.child(i).type !== schema.nodes.callout) {
-            allCalloutsAbove = false;
-            break;
-          }
+        const tr = state.tr.delete(
+          $from.before($from.depth),
+          $from.after($from.depth)
+        );
+
+        const prevCalloutBody = prevNode.child(1);
+        const lastBodyChild = prevCalloutBody.lastChild;
+        const hasTrailingEmpty =
+          lastBodyChild?.type === schema.nodes.paragraph &&
+          lastBodyChild.content.size === 0;
+
+        const bodyEndPos = $from.before($from.depth) - 2;
+
+        if (hasTrailingEmpty) {
+          tr.setMeta("callout:keyboardNav", true);
+          tr.setSelection(TextSelection.create(tr.doc, bodyEndPos));
+        } else {
+          tr.insert(bodyEndPos, schema.nodes.paragraph.create());
+          tr.setMeta("callout:keyboardNav", true);
+          tr.setSelection(TextSelection.create(tr.doc, bodyEndPos + 1));
         }
 
-        if (allCalloutsAbove) {
-          const tr = state.tr.delete(
-            $from.before($from.depth),
-            $from.after($from.depth)
-          );
-
-          const prevCalloutBody = prevNode.child(1);
-          const lastBodyChild = prevCalloutBody.lastChild;
-          const hasTrailingEmpty =
-            lastBodyChild?.type === schema.nodes.paragraph &&
-            lastBodyChild.content.size === 0;
-
-          const bodyEndPos = $from.before($from.depth) - 2;
-
-          if (hasTrailingEmpty) {
-            tr.setMeta("callout:keyboardNav", true);
-            tr.setSelection(TextSelection.create(tr.doc, bodyEndPos));
-          } else {
-            tr.insert(bodyEndPos, schema.nodes.paragraph.create());
-            tr.setMeta("callout:keyboardNav", true);
-            tr.setSelection(TextSelection.create(tr.doc, bodyEndPos + 1));
-          }
-
-          dispatch(tr.scrollIntoView());
-          return true;
-        }
+        dispatch(tr.scrollIntoView());
+        return true;
       }
     }
 
