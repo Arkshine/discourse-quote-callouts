@@ -1253,7 +1253,7 @@ module(
       );
       const bodyAfter = outerCalloutAfter.node.child(1).childCount;
 
-      assert.ok(
+      assert.true(
         bodyAfter > bodyBefore,
         "a new paragraph was added inside the outer callout"
       );
@@ -1283,7 +1283,7 @@ module(
 
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowDown");
 
-      assert.ok(
+      assert.true(
         view.state.doc.content.size <= docSizeBefore,
         "no extra paragraph inserted when content already follows"
       );
@@ -1384,7 +1384,7 @@ module(
       const { view } = editorClass;
 
       const body = findNode(view, "callout_body");
-      assert.ok(body.node.childCount > 1, "body has multiple paragraphs");
+      assert.true(body.node.childCount > 1, "body has multiple paragraphs");
 
       setCursorInNode(view, "text", (n) => n.text === "Second");
       await settled();
@@ -1392,7 +1392,7 @@ module(
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
 
       const bodyAfter = findNode(view, "callout_body");
-      assert.ok(
+      assert.true(
         bodyAfter.node.childCount > 1,
         "paragraphs are preserved, ArrowUp did not remove any"
       );
@@ -1483,7 +1483,6 @@ module(
       );
       const { view } = editorClass;
 
-      // Insert empty paragraph at end of outer body (simulating ArrowUp navigation)
       const outerBody = findNode(view, "callout_body");
       insertEmptyParagraphAt(view, outerBody.pos + outerBody.node.nodeSize - 1);
       await settled();
@@ -1565,7 +1564,7 @@ module(
       setCursorInNode(view, "text", (n) => n.text?.startsWith("My"));
       await settled();
 
-      assert.ok(
+      assert.true(
         view.state.selection.$from.parentOffset > 0,
         "cursor is not at position 0"
       );
@@ -1608,7 +1607,7 @@ module(
       await settled();
 
       const outerBodyAfter = findNode(view, "callout_body");
-      assert.ok(
+      assert.true(
         outerBodyAfter.node.childCount > childCountBefore,
         "a paragraph was inserted after the nested callout"
       );

@@ -26,15 +26,24 @@ export default class CalloutTitleNodeView extends Component {
   @service calloutMoveState;
   @service capabilities;
 
-  @tracked type = this.args.node.attrs.type;
-  @tracked fold = this.args.node.attrs.fold || "";
-  @tracked isCollapsed = this.args.node.attrs.isCollapsed;
-  @tracked isCollapsible = this.args.node.attrs.isCollapsible;
-  @tracked hasBody = this.args.node.attrs.hasBody;
+  @tracked type;
+  @tracked fold;
+  @tracked isCollapsed;
+  @tracked isCollapsible;
+  @tracked hasBody;
   @tracked activeCalloutPos = null;
 
   constructor() {
     super(...arguments);
+
+    const { type, fold, isCollapsed, isCollapsible, hasBody } =
+      this.args.node.attrs;
+
+    this.type = type;
+    this.fold = fold || "";
+    this.isCollapsed = isCollapsed;
+    this.isCollapsible = isCollapsible;
+    this.hasBody = hasBody;
 
     this.args.onSetup?.(this);
     this.activeCalloutPos = activeCalloutPosFromView(this.args.view);
@@ -44,9 +53,6 @@ export default class CalloutTitleNodeView extends Component {
       this,
       this.onSelectionChanged
     );
-
-    const { fold } = this.args.node.attrs;
-    this.fold = fold;
   }
 
   willDestroy() {
