@@ -25,7 +25,7 @@ export default class CalloutChooserPanel extends Component {
   @tracked selectedTypeIndex = -1;
 
   get filteredCallouts() {
-    const all = this.calloutSettings.all();
+    const all = this.calloutSettings.chooser();
     if (!this.searchTerm) {
       return all;
     }
@@ -34,7 +34,9 @@ export default class CalloutChooserPanel extends Component {
     return all.filter(
       (callout) =>
         callout.type.includes(filter) ||
-        callout.title.toLowerCase().includes(filter)
+        callout.title.toLowerCase().includes(filter) ||
+        (callout.hasExplicitTitle &&
+          callout.aliases?.some((alias) => alias.includes(filter)))
     );
   }
 

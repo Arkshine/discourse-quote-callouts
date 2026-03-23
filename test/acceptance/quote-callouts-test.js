@@ -1038,7 +1038,10 @@ acceptance("Callouts Theme Component", function (needs) {
 
     assert
       .dom(".callout-chooser-row")
-      .exists({ count: 7 }, "All callout types (including aliases) are shown");
+      .exists(
+        { count: 4 },
+        "All callout types are shown without alias duplicates"
+      );
 
     await fillIn(".callout-chooser-search input", "exam");
 
@@ -1100,6 +1103,39 @@ acceptance("Callouts Theme Component", function (needs) {
 
     assert
       .dom(".callout-chooser-row")
-      .exists({ count: 7 }, "All types are shown again after reopening");
+      .exists({ count: 4 }, "All types are shown again after reopening");
+  });
+
+  test("callout chooser hides alias entries when type has custom title", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+
+    assert
+      .dom('.callout-chooser-row[data-type="warning"]')
+      .exists("Main type with custom title is shown");
+    assert
+      .dom('.callout-chooser-row[data-type="caution"]')
+      .doesNotExist("Alias is hidden when main type has custom title");
+    assert
+      .dom('.callout-chooser-row[data-type="attention"]')
+      .doesNotExist("Alias is hidden when main type has custom title");
+    assert
+      .dom('.callout-chooser-row[data-type="hint"]')
+      .doesNotExist("Alias is hidden when main type has custom title");
+  });
+
+  test("callout chooser search matches alias names", async function (assert) {
+    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
+
+    await click(".d-editor-preview .callout-chooser-trigger");
+    await fillIn(".callout-chooser-search input", "caution");
+
+    assert
+      .dom(".callout-chooser-row")
+      .exists({ count: 1 }, "Search by alias name finds the parent type");
+    assert
+      .dom('.callout-chooser-row[data-type="warning"]')
+      .exists("Warning type is found when searching by its alias");
   });
 });
