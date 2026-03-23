@@ -3,6 +3,7 @@ import {
   findCalloutOptions,
   getAllCallouts,
   getAllCalloutTypes,
+  getChooserCallouts,
   searchCallouts,
 } from "../lib/config";
 
@@ -13,6 +14,10 @@ export default class CalloutSettings extends Service {
 
   all() {
     return getAllCallouts();
+  }
+
+  chooser() {
+    return getChooserCallouts();
   }
 
   find(type) {

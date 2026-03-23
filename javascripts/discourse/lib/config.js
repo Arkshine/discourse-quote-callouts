@@ -29,12 +29,16 @@ function buildCalloutData(callouts) {
       .filter(Boolean);
 
     const type = callout.type.trim().toLowerCase();
+    const title = callout.title?.trim();
+    const hasExplicitTitle = Boolean(title);
 
     entries.push({
       ...callout,
       type,
       name: type,
-      title: callout.title || capitalizeFirstLetter(type),
+      title: title || capitalizeFirstLetter(type),
+      aliases,
+      hasExplicitTitle,
     });
 
     for (const alias of aliases) {
@@ -43,7 +47,8 @@ function buildCalloutData(callouts) {
         type: alias,
         mainType: type,
         name: alias,
-        title: callout.title || capitalizeFirstLetter(alias),
+        title: title || capitalizeFirstLetter(alias),
+        hasExplicitTitle,
       });
     }
   }
@@ -59,6 +64,12 @@ export function findCalloutOptions(type) {
 
 export function getAllCallouts() {
   return getCalloutData();
+}
+
+export function getChooserCallouts() {
+  return getCalloutData().filter(
+    (callout) => !callout.mainType || !callout.hasExplicitTitle
+  );
 }
 
 export function getAllCalloutTypes() {
