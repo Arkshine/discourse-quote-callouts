@@ -25,8 +25,10 @@ class QuoteCallouts {
 
     api.registerRichEditorExtension(richEditorExtension);
 
-    window.I18n.translations[window.I18n.locale].js.composer.callout_sample =
-      ``;
+    window.I18n.translations[
+      window.I18n.fallbackLocale || "en"
+    ].js.composer.callout_sample = ``;
+
     api.addComposerToolbarPopupMenuOption({
       action: (toolbarEvent) => {
         const defaultType = DEFAULT_CALLOUT_TYPE;
