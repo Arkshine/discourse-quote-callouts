@@ -154,7 +154,10 @@ export default class CalloutTitleNodeView extends Component {
   @action
   focusEditor() {
     next(() => {
-      this.args.view.focus();
+      const { view } = this.args;
+      if (view.dom?.isConnected) {
+        view.focus();
+      }
     });
   }
 
