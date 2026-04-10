@@ -25,9 +25,11 @@ class QuoteCallouts {
 
     api.registerRichEditorExtension(richEditorExtension);
 
-    window.I18n.translations[
-      window.I18n.fallbackLocale || "en"
-    ].js.composer.callout_sample = ``;
+    const fallbackLocale = window.I18n.fallbackLocale || "en";
+    if (!window.I18n.translations[fallbackLocale].js.composer) {
+      window.I18n.translations[fallbackLocale].js.composer = {};
+    }
+    window.I18n.translations[fallbackLocale].js.composer.callout_sample = "";
 
     api.addComposerToolbarPopupMenuOption({
       action: (toolbarEvent) => {
