@@ -12,7 +12,8 @@
   --q-callout-fold-direction: -1;
 }
 
-:is(.ProseMirror, .d-editor-preview, .cooked) blockquote.callout[data-callout-type] {
+:is(.ProseMirror, .d-editor-preview, .cooked)
+  blockquote.callout[data-callout-type] {
   padding: $callout_padding;
   border-radius: $callout_border_radius;
   border-left: 0;
