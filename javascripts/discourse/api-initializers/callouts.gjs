@@ -1,5 +1,7 @@
-import { computed } from "@ember/object";
+import { action, computed } from "@ember/object";
 import { setOwner } from "@ember/owner";
+import { service } from "@ember/service";
+import { convertIconClass, iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
 import Callout from "../components/callout";
@@ -10,14 +12,19 @@ import {
   DEFAULT_CALLOUT_TYPE,
 } from "../lib/config";
 import richEditorExtension from "../lib/rich-editor-extension/index";
+import { createSafeSVG } from "../lib/svg";
 import {
+  capitalizeFirstLetter,
   collectNodesUntil,
   firstMeaningfulNode,
+  hexToRGBA,
   isNodeEmpty,
   leadingTextFromNode,
 } from "../lib/utils";
 
 class QuoteCallouts {
+  @service calloutSettings;
+
   constructor(owner, api) {
     setOwner(this, owner);
     this.api = api;
@@ -66,6 +73,25 @@ class QuoteCallouts {
             </span>
             ${i18n(themePrefix("composer.insert_callout"))}`;
           return shortcuts;
+        }
+      };
+    });
+
+    const instance = this;
+    api.modifyClass("component:modal/history", (Superclass) => {
+      return class extends Superclass {
+        @action
+        async calculateBodyDiff(_, [bodyDiff]) {
+          await super.calculateBodyDiff(_, [bodyDiff]);
+
+          if (this.viewMode === "side_by_side_markdown" || !this.bodyDiff) {
+            return;
+          }
+
+          const root = document.createElement("div");
+          root.innerHTML = this.bodyDiff;
+          instance.renderStaticCallouts(root, this.viewMode);
+          this.bodyDiff = root.innerHTML;
         }
       };
     });
@@ -129,6 +155,146 @@ class QuoteCallouts {
         },
       });
     }
+  }
+
+  renderStaticCallouts(element, viewMode) {
+    if (viewMode !== "inline" && viewMode !== "side_by_side") {
+      return;
+    }
+
+    for (const blockquote of element.querySelectorAll("blockquote")) {
+      if (!blockquote.parentElement) {
+        continue;
+      }
+
+      let typeChanged = false;
+
+      if (
+        blockquote.classList.contains("diff-ins") ||
+        blockquote.classList.contains("diff-del")
+      ) {
+        blockquote
+          .querySelectorAll("ins, del")
+          .forEach((node) => node.replaceWith(...node.childNodes));
+        blockquote.normalize();
+      } else {
+        const firstParagraph = blockquote.firstElementChild;
+        if (firstParagraph?.tagName === "P") {
+          firstParagraph.innerHTML = firstParagraph.innerHTML.replace(
+            /\[!.*?\]/,
+            (marker) => {
+              if (/<ins[\s>]/.test(marker) && /<del[\s>]/.test(marker)) {
+                typeChanged = true;
+                return marker.replace(/<del[^>]*>.*?<\/del>/g, "");
+              }
+              return marker.replace(/<\/?(?:ins|del)[^>]*>/g, "");
+            }
+          );
+        }
+      }
+
+      const preservedClasses = ["diff-ins", "diff-del"].filter((className) =>
+        blockquote.classList.contains(className)
+      );
+
+      const calloutTree = this.parseHeaders(blockquote);
+      if (calloutTree?.isCallout) {
+        const built = this.buildStaticCallout(calloutTree);
+        preservedClasses.forEach((className) => built.classList.add(className));
+
+        if (typeChanged) {
+          built.classList.add("callout-type-changed");
+        }
+
+        calloutTree.root.replaceWith(built);
+      }
+    }
+
+    if (viewMode !== "side_by_side") {
+      return;
+    }
+
+    const sideCallouts = (selector) =>
+      [...element.querySelectorAll(`${selector} .callout`)].filter(
+        (callout) =>
+          !callout.classList.contains("diff-ins") &&
+          !callout.classList.contains("diff-del")
+      );
+    const prevCallouts = sideCallouts(".revision-content.--previous");
+    const currCallouts = sideCallouts(".revision-content.--current");
+    const pairs = Math.min(prevCallouts.length, currCallouts.length);
+
+    for (let i = 0; i < pairs; i++) {
+      if (
+        prevCallouts[i].dataset.calloutType !==
+        currCallouts[i].dataset.calloutType
+      ) {
+        prevCallouts[i].classList.add("callout-type-changed");
+        currCallouts[i].classList.add("callout-type-changed");
+      }
+    }
+  }
+
+  buildStaticCallout(tree) {
+    const options = this.calloutSettings.find(tree.type);
+    const resolvedType = options?.mainType || options?.type || tree.type;
+    const alias = options?.type ? tree.type : resolvedType;
+    const iconSource = options?.icon || settings.callout_fallback_icon;
+    const color = options?.color || settings.callout_fallback_color;
+
+    const bq = document.createElement("blockquote");
+    bq.className = "callout";
+    bq.dataset.calloutType = resolvedType;
+    bq.dataset.calloutAlias = alias;
+    bq.style.setProperty("--q-callout-color", color);
+    bq.style.setProperty(
+      "--q-callout-background",
+      hexToRGBA(color, settings.callout_background_opacity / 100)
+    );
+
+    const titleElement = document.createElement("div");
+    titleElement.className = "callout-title";
+
+    if (iconSource) {
+      const iconElement = document.createElement("span");
+      iconElement.className = "callout-icon";
+      iconElement.innerHTML = iconSource.startsWith("<svg")
+        ? createSafeSVG(iconSource)
+        : iconHTML(convertIconClass(iconSource));
+      titleElement.append(iconElement);
+    }
+
+    const titleInner = document.createElement("span");
+    titleInner.className = "callout-title-inner";
+
+    if (tree.title.hasInline && tree.title.nodes.length) {
+      tree.title.nodes.forEach((node) => titleInner.append(node));
+    } else {
+      titleInner.textContent =
+        tree.title.text ||
+        options?.title ||
+        capitalizeFirstLetter(resolvedType);
+    }
+
+    titleElement.append(titleInner);
+    bq.append(titleElement);
+
+    if (tree.children?.length) {
+      const content = document.createElement("div");
+      content.className = "callout-content";
+
+      for (const child of tree.children) {
+        if (child.isCallout) {
+          content.append(this.buildStaticCallout(child));
+        } else if (child.content) {
+          content.append(child.content);
+        }
+      }
+
+      bq.append(content);
+    }
+
+    return bq;
   }
 
   processCookedElement(element, helper, { isChat = false } = {}) {

@@ -12,7 +12,7 @@
   --q-callout-fold-direction: -1;
 }
 
-:is(.ProseMirror, .d-editor-preview, .cooked)
+:is(.ProseMirror, .d-editor-preview, .cooked, .body-diff)
   blockquote.callout[data-callout-type] {
   padding: $callout_padding;
   border-radius: $callout_border_radius;
@@ -146,5 +146,24 @@
 
   .callout-icon svg {
     color: var(--q-callout-color);
+  }
+}
+
+.history-modal {
+  .inline-diff .callout.callout-type-changed > .callout-title > .callout-icon,
+  .revision-content.--current
+    .callout.callout-type-changed
+    > .callout-title
+    > .callout-icon {
+    outline: 2px solid var(--success-low);
+    outline-offset: 2px;
+  }
+
+  .revision-content.--previous
+    .callout.callout-type-changed
+    > .callout-title
+    > .callout-icon {
+    outline: 2px solid var(--danger-low);
+    outline-offset: 2px;
   }
 }
