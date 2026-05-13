@@ -53,7 +53,7 @@ class QuoteCallouts {
       },
       icon: "callout",
       label: themePrefix("composer.callout"),
-      shortcut: "q",
+      shortcut: "alt+C",
     });
 
     // Add callout to keyboard shortcuts help modal
@@ -69,7 +69,8 @@ class QuoteCallouts {
           shortcuts.composing.shortcuts.callout = `
             <span class="delimiter-or" dir="ltr">
               <kbd>Ctrl</kbd>
-              <kbd>q</kbd>
+              <kbd>Alt</kbd>
+              <kbd>C</kbd>
             </span>
             ${i18n(themePrefix("composer.insert_callout"))}`;
           return shortcuts;
