@@ -150,7 +150,10 @@
 }
 
 .history-modal {
-  .inline-diff .callout.callout-type-changed > .callout-title > .callout-icon,
+  .inline-diff
+    .callout.callout-type-changed
+    > .callout-title
+    > .callout-icon--new,
   .revision-content.--current
     .callout.callout-type-changed
     > .callout-title
@@ -159,11 +162,22 @@
     outline-offset: 2px;
   }
 
+  .inline-diff
+    .callout.callout-type-changed
+    > .callout-title
+    > .callout-icon--old,
   .revision-content.--previous
     .callout.callout-type-changed
     > .callout-title
     > .callout-icon {
     outline: 2px solid var(--danger-low);
     outline-offset: 2px;
+  }
+
+  .inline-diff
+    .callout.callout-type-changed
+    > .callout-title
+    > .callout-icon--old {
+    opacity: 0.6;
   }
 }

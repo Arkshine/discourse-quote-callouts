@@ -192,6 +192,7 @@ class QuoteCallouts {
       }
 
       let typeChanged = false;
+      let previousType;
 
       if (
         blockquote.classList.contains("diff-ins") ||
@@ -209,7 +210,19 @@ class QuoteCallouts {
             (marker) => {
               if (/<ins[\s>]/.test(marker) && /<del[\s>]/.test(marker)) {
                 typeChanged = true;
-                return marker.replace(/<del[^>]*>.*?<\/del>/g, "");
+
+                const oldMarker = marker
+                  .replace(/<ins[^>]*>.*?<\/ins>/g, "")
+                  .replace(/<\/?del[^>]*>/g, "");
+                const oldMatch = oldMarker.match(/^\[!([^\]]+)\]/);
+
+                if (oldMatch) {
+                  previousType = oldMatch[1].toLowerCase();
+                }
+
+                return marker
+                  .replace(/<del[^>]*>.*?<\/del>/g, "")
+                  .replace(/<\/?ins[^>]*>/g, "");
               }
               return marker.replace(/<\/?(?:ins|del)[^>]*>/g, "");
             }
@@ -223,6 +236,10 @@ class QuoteCallouts {
 
       const calloutTree = this.parseHeaders(blockquote);
       if (calloutTree?.isCallout) {
+        if (typeChanged && previousType) {
+          calloutTree.previousType = previousType;
+        }
+
         const built = this.buildStaticCallout(calloutTree);
         preservedClasses.forEach((className) => built.classList.add(className));
 
@@ -279,9 +296,26 @@ class QuoteCallouts {
     const titleElement = document.createElement("div");
     titleElement.className = "callout-title";
 
+    if (tree.previousType) {
+      const prevOptions = this.calloutSettings.find(tree.previousType);
+      const prevIconSource =
+        prevOptions?.icon || settings.callout_fallback_icon;
+
+      if (prevIconSource) {
+        const prevIcon = document.createElement("span");
+        prevIcon.className = "callout-icon callout-icon--old";
+        prevIcon.innerHTML = prevIconSource.startsWith("<svg")
+          ? createSafeSVG(prevIconSource)
+          : iconHTML(convertIconClass(prevIconSource));
+        titleElement.append(prevIcon);
+      }
+    }
+
     if (iconSource) {
       const iconElement = document.createElement("span");
-      iconElement.className = "callout-icon";
+      iconElement.className = tree.previousType
+        ? "callout-icon callout-icon--new"
+        : "callout-icon";
       iconElement.innerHTML = iconSource.startsWith("<svg")
         ? createSafeSVG(iconSource)
         : iconHTML(convertIconClass(iconSource));
