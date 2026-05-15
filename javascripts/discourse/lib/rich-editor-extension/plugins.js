@@ -1,4 +1,5 @@
 import {
+  CALLOUT_EXCERPT_REGEX,
   CALLOUT_MARKER_REGEX,
   DEFAULT_CALLOUT_TYPE,
   findCalloutOptions,
@@ -430,5 +431,42 @@ export function plugins({
     },
   });
 
-  return [calloutPlugin, calloutSelectionPlugin];
+  const oneboxMarkerStripPlugin = new Plugin({
+    key: new PluginKey("oneboxMarkerStrip"),
+    appendTransaction(transactions, _oldState, newState) {
+      if (!transactions.some((tr) => tr.docChanged)) {
+        return null;
+      }
+
+      const oneboxType = newState.schema.nodes.onebox;
+      if (!oneboxType) {
+        return null;
+      }
+
+      let tr = null;
+
+      newState.doc.descendants((node, pos) => {
+        if (node.type !== oneboxType) {
+          return;
+        }
+
+        const html = node.attrs.html;
+        if (!html) {
+          return;
+        }
+
+        const stripped = html.replace(CALLOUT_EXCERPT_REGEX, "");
+        if (stripped === html) {
+          return;
+        }
+
+        tr ??= newState.tr;
+        tr.setNodeMarkup(pos, null, { ...node.attrs, html: stripped });
+      });
+
+      return tr;
+    },
+  });
+
+  return [calloutPlugin, calloutSelectionPlugin, oneboxMarkerStripPlugin];
 }

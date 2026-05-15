@@ -22,6 +22,9 @@ import {
   leadingTextFromNode,
 } from "../lib/utils";
 
+const ONEBOX_SELECTOR = "aside.onebox, aside.quote[data-topic]";
+const PENDING_ONEBOX_SELECTOR = "a.onebox";
+
 class QuoteCallouts {
   @service calloutSettings;
 
@@ -106,8 +109,28 @@ class QuoteCallouts {
       };
     });
 
+    // Strips callout marker only on collapsed quote (see PostQuotedContent)
+    api.modifyClass("component:post/cooked-html", (Superclass) => {
+      return class extends Superclass {
+        get cooked() {
+          const value = super.cooked;
+          const isCollapsedQuote =
+            this.args.cooked &&
+            this.args.className === "post__contents-cooked-quote";
+
+          if (!isCollapsedQuote || !value) {
+            return value;
+          }
+
+          // `value` may be a TrustedHTML wrapper. Template re-wraps via `trustHTML`.
+          return value.toString().replace(CALLOUT_EXCERPT_REGEX, "");
+        }
+      };
+    });
+
     api.decorateCookedElement((cooked, helper) => {
       this.processCookedElement(cooked, helper);
+      return () => this.disconnectPreviewObserver(cooked);
     });
 
     if (this.hasChatContext) {
@@ -302,6 +325,15 @@ class QuoteCallouts {
     const isPreview = !isChat && !helper.model;
     const calloutCounter = { value: 0 };
 
+    // Removes marker from onebox excerpts
+    element
+      .querySelectorAll(ONEBOX_SELECTOR)
+      .forEach((aside) => this.stripMarkerFromExcerpt(aside));
+
+    if (isPreview) {
+      this.observePreviewOneboxes(element);
+    }
+
     for (const blockquote of element.querySelectorAll("blockquote")) {
       // Skip if already processed (replaced with container)
       if (!blockquote.parentElement) {
@@ -322,6 +354,55 @@ class QuoteCallouts {
 
       root.replaceWith(container);
       helper.renderGlimmer(container, Callout, { ...calloutTrees });
+    }
+  }
+
+  stripMarkerFromExcerpt(blockquote) {
+    const walker = document.createTreeWalker(blockquote, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      node.nodeValue = node.nodeValue.replace(CALLOUT_EXCERPT_REGEX, "");
+    }
+  }
+
+  // Covers the first time the markdown preview is opened.
+  observePreviewOneboxes(preview) {
+    this.previewObservers ??= new WeakMap();
+
+    if (this.previewObservers.has(preview)) {
+      return;
+    }
+
+    if (!preview.querySelector(PENDING_ONEBOX_SELECTOR)) {
+      return;
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            node.matches(ONEBOX_SELECTOR)
+          ) {
+            this.stripMarkerFromExcerpt(node);
+          }
+        }
+      }
+
+      if (!preview.querySelector(PENDING_ONEBOX_SELECTOR)) {
+        this.disconnectPreviewObserver(preview);
+      }
+    });
+
+    observer.observe(preview, { childList: true, subtree: true });
+    this.previewObservers.set(preview, observer);
+  }
+
+  disconnectPreviewObserver(preview) {
+    const observer = this.previewObservers?.get(preview);
+    if (observer) {
+      observer.disconnect();
+      this.previewObservers.delete(preview);
     }
   }
 
