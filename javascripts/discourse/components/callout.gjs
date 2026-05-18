@@ -160,13 +160,13 @@ export default class Callout extends Component {
           </span>
         {{/if}}
         <span class="callout-title-inner">
-          {{#if @data.title.hasInline}}
-            {{#each @data.title.nodes as |node|}}
-              {{node}}
-            {{/each}}
-          {{else}}
-            {{this.title}}
-          {{/if}}
+          {{~#if @data.title.hasInline~}}
+            {{~#each @data.title.nodes as |node|~}}
+              {{~node~}}
+            {{~/each~}}
+          {{~else~}}
+            {{~this.title~}}
+          {{~/if~}}
         </span>
         {{#if this.isCollapsible}}
           <span

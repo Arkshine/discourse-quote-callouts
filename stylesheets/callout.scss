@@ -42,6 +42,13 @@
     > .callout-title-inner {
       flex: 1;
 
+      code {
+        padding: 2px 4px;
+        background: var(--inline-code-bg);
+        white-space: pre-wrap;
+        color: var(--primary);
+      }
+
       .emoji {
         vertical-align: middle;
       }
