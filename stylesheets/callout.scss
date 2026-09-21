@@ -12,7 +12,7 @@
   --q-callout-fold-direction: -1;
 }
 
-:is(.ProseMirror, .d-editor-preview, .cooked, .body-diff)
+:is(.ProseMirror, .d-editor-preview, .cooked, .chat-cooked, .body-diff)
   blockquote.callout[data-callout-type] {
   padding: $callout_padding;
   border-radius: $callout_border_radius;
