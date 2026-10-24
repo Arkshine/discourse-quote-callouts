@@ -28,6 +28,8 @@ By default, the title of the callout is its type identifier in title case. You c
 > They can also contain special inline formatting like dynamic dates.
 ```
 
+Native Discourse `[date]` tags work in callout titles and content, including nested and collapsed callouts. Dates use Discourse's local timezone formatting and date popover, just as they do outside callouts.
+
 ![Custom title examples](./.github/images/custom_titles.png)
 
 You can also create title-only callouts:
