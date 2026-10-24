@@ -7,6 +7,7 @@ import { service } from "@ember/service";
 import concatClass from "discourse/helpers/concat-class";
 import icon from "discourse/helpers/d-icon";
 import noop from "discourse/helpers/noop";
+import { applyLocalDates } from "discourse/lib/local-dates";
 import iconOrSvg from "../helpers/icon-or-svg";
 import { DEFAULT_CALLOUT_TYPE } from "../lib/config";
 import {
@@ -18,6 +19,7 @@ import CalloutChooser from "./callout-chooser";
 
 export default class Callout extends Component {
   @service calloutSettings;
+  @service siteSettings;
 
   @tracked isCollapsed;
 
@@ -48,6 +50,17 @@ export default class Callout extends Component {
   @action
   setupContent(element) {
     this.contentElement = element;
+  }
+
+  @action
+  setupDates(element) {
+    // Callout nodes are detached while cooked decorators run.
+    const dates = element.querySelectorAll(
+      ".discourse-local-date:not(.cooked-date)"
+    );
+    if (dates.length) {
+      applyLocalDates(dates, this.siteSettings);
+    }
   }
 
   @action
@@ -140,6 +153,7 @@ export default class Callout extends Component {
       data-callout-type={{this.type}}
       data-callout-alias={{this.alias}}
       {{didInsert this.setupColor}}
+      {{didInsert this.setupDates}}
     >
       {{! template-lint-disable no-invalid-interactive }}
       {{! template-lint-disable no-pointer-down-event-binding }}
