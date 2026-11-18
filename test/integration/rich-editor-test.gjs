@@ -128,6 +128,16 @@ module(
       );
     });
 
+    test("AI marker stays outside Quote Callouts", async function (assert) {
+      await setupRichEditor(assert, "> [!AI]\n> AI-generated content");
+      assert.dom(".composer-callout-node").doesNotExist();
+    });
+
+    test("lowercase AI marker stays outside Quote Callouts", async function (assert) {
+      await setupRichEditor(assert, "> [!ai]\n> AI-generated content");
+      assert.dom(".composer-callout-node").doesNotExist();
+    });
+
     test("unknown callout type falls back to configured fallback", async function (assert) {
       await testMarkdown(
         assert,
@@ -836,6 +846,13 @@ module("Integration | Rich Editor | Callout – paste handler", function (hooks)
       editorClass.value.startsWith("> [!note]"),
       "serialized markdown starts with callout marker"
     );
+  });
+
+  test("pasting an AI marker does not create a callout node", async function (assert) {
+    await setupRichEditor(assert, "");
+    const text = "> [!AI]\n> AI-generated content";
+    await paste(".ProseMirror", text, pasteMarkdown(text));
+    assert.dom(".composer-callout-node").doesNotExist();
   });
 
   test("pasting a non-callout blockquote does not create a callout node", async function (assert) {

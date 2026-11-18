@@ -2,6 +2,7 @@ import {
   CALLOUT_REGEX,
   DEFAULT_CALLOUT_TYPE,
   findCalloutOptions,
+  isReservedCalloutType,
 } from "../config";
 import { splitAtFirstLineBreak, stripPrefix } from "../rich-editor-utils";
 import { capitalizeFirstLetter } from "../utils";
@@ -24,7 +25,7 @@ export const parse = {
       inlineToken?.type === "inline" &&
       firstLine.match(CALLOUT_REGEX);
 
-    if (!match) {
+    if (!match || isReservedCalloutType(match.groups.callout)) {
       state._bqStack.push("blockquote");
       state.openNode(state.schema.nodes.blockquote);
       return true;
