@@ -1,4 +1,8 @@
-import { CALLOUT_REGEX, findCalloutOptions } from "../config";
+import {
+  CALLOUT_REGEX,
+  findCalloutOptions,
+  isReservedCalloutType,
+} from "../config";
 import { capitalizeFirstLetter } from "../utils";
 
 // Converts pasted markdown callout syntax (e.g. `> [!note]`) into callout
@@ -35,7 +39,7 @@ function convertBlockquoteToCallout(blockquote, schema) {
     firstPara?.type === schema.nodes.paragraph &&
     firstPara.textContent.match(CALLOUT_REGEX);
 
-  if (!match) {
+  if (!match || isReservedCalloutType(match.groups.callout)) {
     return null;
   }
 
