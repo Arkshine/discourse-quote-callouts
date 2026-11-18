@@ -357,6 +357,18 @@ acceptance("Callouts Theme Component", function (needs) {
       .hasClass("d-icon-triangle-exclamation", "Callout icon is correct");
   });
 
+  test("AI content marker is left to Discourse core", async function (assert) {
+    await visitAndCreate("> [!AI]\n> AI-generated content");
+
+    assert.dom(".callout").doesNotExist("AI marker is not a callout");
+  });
+
+  test("lowercase AI content marker is left to Discourse core", async function (assert) {
+    await visitAndCreate("> [!ai]\n> AI-generated content");
+
+    assert.dom(".callout").doesNotExist("lowercase AI marker is not a callout");
+  });
+
   test("fallback behavior", async function (assert) {
     await visitAndCreate(FIXTURES.UNKNOWN_TYPE_CALLOUT);
 

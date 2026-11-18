@@ -10,6 +10,7 @@ import {
   CALLOUT_EXCERPT_REGEX,
   CALLOUT_REGEX,
   DEFAULT_CALLOUT_TYPE,
+  isReservedCalloutType,
 } from "../lib/config";
 import richEditorExtension from "../lib/rich-editor-extension/index";
 import { createSafeSVG } from "../lib/svg";
@@ -474,6 +475,9 @@ class QuoteCallouts {
     }
 
     const type = match.groups.callout.toLowerCase() || DEFAULT_CALLOUT_TYPE;
+    if (isReservedCalloutType(type)) {
+      return null;
+    }
     const fold = match.groups.fold || "";
     const title = match.groups.title?.trim() || "";
 
