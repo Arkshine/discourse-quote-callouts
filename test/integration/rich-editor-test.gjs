@@ -895,8 +895,10 @@ module("Integration | Rich Editor | Callout – paste handler", function (hooks)
 
   test("pasting an attributed AI blockquote keeps callout-like content literal", async function (assert) {
     const [editor] = await setupRichEditor(assert, "");
+    // Surrounding blocks keep the quote closed in the pasted slice; a lone
+    // open quote may be unwrapped by ProseMirror when pasted into a paragraph.
     editor.view.pasteHTML(
-      '<blockquote data-ai-generated="true"><p>[!note] Literal AI content</p></blockquote>'
+      '<p>Before quote</p><blockquote data-ai-generated="true"><p>[!note] Literal AI content</p></blockquote><p>After quote</p>'
     );
     await settled();
 
