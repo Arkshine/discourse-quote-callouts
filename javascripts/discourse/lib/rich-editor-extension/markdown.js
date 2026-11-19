@@ -8,8 +8,11 @@ import { splitAtFirstLineBreak, stripPrefix } from "../rich-editor-utils";
 import { capitalizeFirstLetter } from "../utils";
 
 export const parse = {
-  blockquote_open(state, _token, tokens, i) {
+  blockquote_open(state, token, tokens, i) {
     state._bqStack ||= [];
+    // Core consumes [!AI] before this parser runs. Preserve its attribution
+    // instead of interpreting the first line of AI content as a callout title.
+    const ai = token.attrGet("data-ai-generated") === "true";
 
     // A blockquote wrapping a paragraph produces this token layout:
     // i+0: blockquote_open
@@ -21,13 +24,14 @@ export const parse = {
     const inlineToken = tokens[i + 2];
     const firstLine = (inlineToken?.content || "").split("\n")[0];
     const match =
+      !ai &&
       tokens[i + 1]?.type === "paragraph_open" &&
       inlineToken?.type === "inline" &&
       firstLine.match(CALLOUT_REGEX);
 
     if (!match || isReservedCalloutType(match.groups.callout)) {
       state._bqStack.push("blockquote");
-      state.openNode(state.schema.nodes.blockquote);
+      state.openNode(state.schema.nodes.blockquote, { ai });
       return true;
     }
 

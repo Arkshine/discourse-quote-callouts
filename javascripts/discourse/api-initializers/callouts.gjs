@@ -453,6 +453,10 @@ class QuoteCallouts {
   }
 
   parseHeaders(blockquoteElement) {
+    if (blockquoteElement?.getAttribute("data-ai-generated") === "true") {
+      return null;
+    }
+
     // First element must be a paragraph
     const firstParagraph = blockquoteElement?.firstElementChild;
     if (!firstParagraph || firstParagraph.tagName !== "P") {
