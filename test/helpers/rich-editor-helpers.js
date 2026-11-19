@@ -113,3 +113,16 @@ export async function typeText(view, text, settled) {
     await settled();
   }
 }
+
+/**
+ * Describes the gap cursor as "parent: before | after", or null if the
+ * selection is not a gap cursor.
+ */
+export function gapCursorAt(view) {
+  const { selection } = view.state;
+  if (selection.toJSON().type !== "gapcursor") {
+    return null;
+  }
+  const { $from } = selection;
+  return `${$from.parent.type.name}: ${$from.nodeBefore?.type.name ?? "start"} | ${$from.nodeAfter?.type.name ?? "end"}`;
+}
