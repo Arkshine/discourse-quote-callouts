@@ -34,6 +34,10 @@ function sliceFragment(fragment, stripLen, schema) {
 // Tries to convert a blockquote node into a callout.
 // Returns null if the first paragraph doesn't match the `[!type]` pattern.
 function convertBlockquoteToCallout(blockquote, schema) {
+  if (blockquote.attrs.ai) {
+    return null;
+  }
+
   const firstPara = blockquote.firstChild;
   const match =
     firstPara?.type === schema.nodes.paragraph &&

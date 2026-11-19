@@ -361,6 +361,9 @@ acceptance("Callouts Theme Component", function (needs) {
     await visitAndCreate("> [!AI]\n> AI-generated content");
 
     assert.dom(".callout").doesNotExist("AI marker is not a callout");
+    assert
+      .dom(".d-editor-preview blockquote[data-ai-generated='true'] > .ai-badge")
+      .exists("the native AI badge is preserved in the Markdown preview");
   });
 
   test("lowercase AI content marker is left to Discourse core", async function (assert) {

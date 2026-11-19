@@ -129,9 +129,47 @@ module(
     });
 
     test("AI marker stays outside Quote Callouts", async function (assert) {
-      await setupRichEditor(assert, "> [!AI]\n> AI-generated content");
-      assert.dom(".composer-callout-node").doesNotExist();
+      const markdown = "> [!AI]\n> AI-generated content";
+      await testMarkdown(
+        assert,
+        markdown,
+        () => {
+          assert.dom(".composer-callout-node").doesNotExist();
+          assert
+            .dom(
+              ".ProseMirror blockquote[data-ai-generated='true'] > .ai-badge"
+            )
+            .exists("core renders the AI badge");
+        },
+        markdown,
+        { multiToggle: true }
+      );
     });
+
+    for (const [name, markdown] of Object.entries({
+      "callout-like AI content": "> [!AI]\n> [!note] Literal AI content",
+      "AI list": "> [!AI]\n> * First\n> * Second",
+      "AI quote inside a callout":
+        "> [!note] Title\n> > [!AI]\n> > Generated content",
+      "callout inside an AI quote":
+        "> [!AI]\n> Generated content\n>\n> > [!note] Title\n> > Body",
+    })) {
+      test(`${name} preserves native attribution across editor toggles`, async function (assert) {
+        await testMarkdown(
+          assert,
+          markdown,
+          () => {
+            assert
+              .dom(
+                ".ProseMirror blockquote[data-ai-generated='true'] > .ai-badge"
+              )
+              .exists("the native AI badge survives");
+          },
+          markdown.replace("[!note] Literal", "\\[!note\\] Literal"),
+          { multiToggle: true }
+        );
+      });
+    }
 
     test("lowercase AI marker stays outside Quote Callouts", async function (assert) {
       await setupRichEditor(assert, "> [!ai]\n> AI-generated content");
@@ -853,6 +891,29 @@ module("Integration | Rich Editor | Callout – paste handler", function (hooks)
     const text = "> [!AI]\n> AI-generated content";
     await paste(".ProseMirror", text, pasteMarkdown(text));
     assert.dom(".composer-callout-node").doesNotExist();
+  });
+
+  test("pasting an attributed AI blockquote keeps callout-like content literal", async function (assert) {
+    const [editor] = await setupRichEditor(assert, "");
+    // Surrounding blocks keep the quote closed in the pasted slice; a lone
+    // open quote may be unwrapped by ProseMirror when pasted into a paragraph.
+    editor.view.pasteHTML(
+      '<p>Before quote</p><blockquote data-ai-generated="true"><p>[!note] Literal AI content</p></blockquote><p>After quote</p>'
+    );
+    await settled();
+
+    assert.dom(".composer-callout-node").doesNotExist();
+    assert
+      .dom(".ProseMirror blockquote")
+      .hasAttribute(
+        "data-ai-generated",
+        "true",
+        "pasted HTML keeps native attribution"
+      );
+    assert.true(editor.value.includes("> [!AI]"), "AI marker is serialized");
+    assert
+      .dom(".ProseMirror blockquote p")
+      .hasText("[!note] Literal AI content", "AI content is not converted");
   });
 
   test("pasting a non-callout blockquote does not create a callout node", async function (assert) {
