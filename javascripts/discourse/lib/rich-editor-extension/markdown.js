@@ -213,6 +213,12 @@ export const serializeNode = {
             state.flushClose(paraToBlock ? 1 : 2);
           }
           state.render(child, bodyNode, index);
+
+          // Some core blocks end with a raw "\n\n", which drops the "> " prefix.
+          if (state.out.endsWith("\n\n")) {
+            state.out = state.out.slice(0, -1);
+            state.closeBlock(child);
+          }
         });
       }
     });
