@@ -4,16 +4,16 @@ import { service } from "@ember/service";
 import { convertIconClass, iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
-import CalloutChooser from "../components/callout-chooser";
-import CalloutChooserPanel from "../components/callout-chooser-panel";
+import CalloutChooser from "../components/callout-chooser.gjs";
+import CalloutChooserPanel from "../components/callout-chooser-panel.gjs";
 import {
   CALLOUT_EXCERPT_REGEX,
   CALLOUT_REGEX,
   DEFAULT_CALLOUT_TYPE,
   isReservedCalloutType,
-} from "../lib/config";
-import richEditorExtension from "../lib/rich-editor-extension/index";
-import { createSafeSVG } from "../lib/svg";
+} from "../lib/config.js";
+import richEditorExtension from "../lib/rich-editor-extension/index.js";
+import { createSafeSVG } from "../lib/svg.js";
 import {
   capitalizeFirstLetter,
   collectNodesUntil,
@@ -22,16 +22,16 @@ import {
   isNodeEmpty,
   leadingTextFromNode,
   toggleCalloutCollapse,
-} from "../lib/utils";
+} from "../lib/utils.js";
 
 const ONEBOX_SELECTOR = "aside.onebox, aside.quote[data-topic]";
 const PENDING_ONEBOX_SELECTOR = "a.onebox";
 
 const PreviewTypeChooser = <template>
   <CalloutChooser
-    @value={{@data.type}}
-    @onChange={{@data.onChange}}
     class="btn-transparent"
+    @onChange={{@data.onChange}}
+    @value={{@data.type}}
   />
 </template>;
 
@@ -179,8 +179,8 @@ class QuoteCallouts {
             identifier,
             component: <template>
               <CalloutChooserPanel
-                @onSelect={{@data.onSelect}}
                 @close={{@data.close}}
+                @onSelect={{@data.onSelect}}
               />
             </template>,
             data: {

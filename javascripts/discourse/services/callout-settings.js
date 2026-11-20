@@ -5,7 +5,7 @@ import {
   getAllCalloutTypes,
   getChooserCallouts,
   searchCallouts,
-} from "../lib/config";
+} from "../lib/config.js";
 
 export default class CalloutSettings extends Service {
   allTypes() {

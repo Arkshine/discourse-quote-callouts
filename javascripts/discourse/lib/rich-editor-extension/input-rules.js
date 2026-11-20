@@ -1,5 +1,5 @@
-import { DEFAULT_CALLOUT_TYPE, isReservedCalloutType } from "../config";
-import { buildCallout } from "../rich-editor-utils";
+import { DEFAULT_CALLOUT_TYPE, isReservedCalloutType } from "../config.js";
+import { buildCallout } from "../rich-editor-utils.js";
 
 export const inputRules = () => {
   function calloutInputHandler(state, type, start, end) {

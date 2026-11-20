@@ -3,16 +3,16 @@ import {
   CALLOUT_MARKER_REGEX,
   DEFAULT_CALLOUT_TYPE,
   findCalloutOptions,
-} from "../config";
-import { findAncestor } from "../rich-editor-utils";
-import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../utils";
+} from "../config.js";
+import { findAncestor } from "../rich-editor-utils.js";
+import { capitalizeFirstLetter, hexToRGBA, isNodeEmpty } from "../utils.js";
 import {
   handleArrowDown,
   handleArrowLeft,
   handleArrowUp,
   handleEnter,
-} from "./keyboard";
-import { transformFragmentsToCallouts } from "./paste-handler";
+} from "./keyboard.js";
+import { transformFragmentsToCallouts } from "./paste-handler.js";
 
 export function plugins({
   pmState: { Plugin, TextSelection, PluginKey },

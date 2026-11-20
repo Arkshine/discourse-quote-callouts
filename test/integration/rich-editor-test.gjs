@@ -7,7 +7,6 @@ import {
   waitFor,
 } from "@ember/test-helpers";
 import { module, test } from "qunit";
-import DEditor from "discourse/components/d-editor";
 import { forceMobile } from "discourse/lib/mobile";
 import { setupRenderingTest } from "discourse/tests/helpers/component-test";
 import { paste } from "discourse/tests/helpers/qunit-helpers";
@@ -15,6 +14,7 @@ import {
   setupRichEditor,
   testMarkdown,
 } from "discourse/tests/helpers/rich-editor-helper";
+import DEditor from "discourse/ui-kit/d-editor";
 import {
   assertCursorInBody,
   callHandleClick,
@@ -24,7 +24,7 @@ import {
   isInsideNode,
   setCursorInNode,
   typeText,
-} from "../helpers/rich-editor-helpers";
+} from "../helpers/rich-editor-helpers.js";
 
 async function selectCalloutType(type) {
   await click(".callout-chooser-trigger");
@@ -398,9 +398,9 @@ module("Integration | Rich Editor | Callout – commands", function (hooks) {
     await render(
       <template>
         <DEditor
-          @value={{self.value}}
-          @processPreview={{false}}
           @onSetup={{handleSetup}}
+          @processPreview={{false}}
+          @value={{self.value}}
         />
       </template>
     );
