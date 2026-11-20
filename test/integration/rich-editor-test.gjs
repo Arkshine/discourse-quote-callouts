@@ -1214,6 +1214,77 @@ module(
     setupRenderingTest(hooks);
     setupCalloutSettings(hooks);
 
+    test("Backspace at title start keeps the title inside and selects the callout", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "Before\n\n> [!note] Title\n> Body"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(
+        findNode(view, "callout_title").node.textContent,
+        "Title"
+      );
+      assert.strictEqual(view.state.doc.firstChild.textContent, "Before");
+      assert.strictEqual(view.state.selection.node?.type.name, "callout");
+    });
+
+    test("Backspace at title start of a blank callout removes it", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "Before\n\n> [!note]"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(findNode(view, "callout"), null);
+      assert.strictEqual(view.state.doc.firstChild.textContent, "Before");
+    });
+
+    test("Backspace in the empty first body line removes it and returns to the title", async function (assert) {
+      const [editorClass] = await setupRichEditor(assert, "> [!note] Title");
+      const { view } = editorClass;
+
+      const body = findNode(view, "callout_body");
+      insertEmptyParagraphAt(view, body.pos + 1);
+      setCursorInNode(view, "paragraph", (n) => n.content.size === 0);
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(findNode(view, "callout_body").node.childCount, 0);
+      assert.true(isInsideNode(view.state.selection, "callout_title"));
+      assert.strictEqual(view.state.selection.$from.parentOffset, 5);
+    });
+
+    test("Backspace at the start of a non-empty first body line moves to the title", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note] Title\n> Body"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_body");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(
+        findNode(view, "callout_title").node.textContent,
+        "Title"
+      );
+      assert.strictEqual(
+        findNode(view, "callout_body").node.textContent,
+        "Body"
+      );
+      assert.true(isInsideNode(view.state.selection, "callout_title"));
+    });
+
     test("Enter in title moves cursor into the callout body", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
