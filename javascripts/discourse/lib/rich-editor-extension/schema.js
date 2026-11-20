@@ -95,6 +95,8 @@ export const nodeSpec = {
     defining: true,
     selectable: false,
     createGapCursor: true,
+    // Lets the gap cursor sit at the body edges, next to a leading/trailing block.
+    isolating: true,
     toDOM() {
       return ["div", { class: "callout-content" }, 0];
     },

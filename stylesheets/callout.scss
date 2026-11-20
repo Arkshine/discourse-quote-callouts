@@ -58,6 +58,10 @@
       text-decoration: underline;
     }
 
+    > .callout-chooser-slot {
+      display: contents;
+    }
+
     > .callout-fold {
       padding-inline-end: 8px;
       display: flex;
