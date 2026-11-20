@@ -1,5 +1,5 @@
 import { isTesting } from "discourse/lib/environment";
-import { capitalizeFirstLetter } from "./utils";
+import { capitalizeFirstLetter } from "./utils.js";
 
 // Discourse core owns [!ai] markers for AI content attribution.
 // Do not strip those markers from quotes or excerpts.

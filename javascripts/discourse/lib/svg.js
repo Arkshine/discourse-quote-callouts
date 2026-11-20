@@ -1,4 +1,4 @@
-import DOMPurify from "./vendor/dom-purify";
+import DOMPurify from "./vendor/dom-purify.js";
 
 const SVG_SANITIZER_CONFIG = {
   // Return a DOM fragment for proper node creation

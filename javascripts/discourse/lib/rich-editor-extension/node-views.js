@@ -1,7 +1,7 @@
-import CalloutNodeView from "../../components/callout-node-view";
-import CalloutTitleNodeView from "../../components/callout-title-node-view";
-import GlimmerNodeView from "../../lib/glimmer-node-view";
-import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
+import CalloutNodeView from "../../components/callout-node-view.gjs";
+import CalloutTitleNodeView from "../../components/callout-title-node-view.gjs";
+import GlimmerNodeView from "../../lib/glimmer-node-view.js";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config.js";
 
 // TODO: Get rid of a custom glimmer-node-view with this syntax?
 //

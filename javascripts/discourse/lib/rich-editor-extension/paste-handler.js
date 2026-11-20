@@ -2,8 +2,8 @@ import {
   CALLOUT_REGEX,
   findCalloutOptions,
   isReservedCalloutType,
-} from "../config";
-import { capitalizeFirstLetter } from "../utils";
+} from "../config.js";
+import { capitalizeFirstLetter } from "../utils.js";
 
 // Converts pasted markdown callout syntax (e.g. `> [!note]`) into callout
 // nodes. Handles both blockquote-based and plain-text `> ` pastes, with

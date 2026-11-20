@@ -1,8 +1,8 @@
-import { DEFAULT_CALLOUT_TYPE } from "../config";
+import { DEFAULT_CALLOUT_TYPE } from "../config.js";
 import {
   buildCallout,
   insertBlockAtInlineSelection,
-} from "../rich-editor-utils";
+} from "../rich-editor-utils.js";
 
 export const commands = ({ schema, utils }) => ({
   insertCallout:

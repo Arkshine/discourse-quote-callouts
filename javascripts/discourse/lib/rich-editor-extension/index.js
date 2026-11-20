@@ -1,10 +1,10 @@
-import { commands } from "./commands";
-import { inputRules } from "./input-rules";
-import { handleBackspace } from "./keyboard";
-import { parse, serializeNode } from "./markdown";
-import { nodeViews } from "./node-views";
-import { plugins } from "./plugins";
-import { nodeSpec } from "./schema";
+import { commands } from "./commands.js";
+import { inputRules } from "./input-rules.js";
+import { handleBackspace } from "./keyboard.js";
+import { parse, serializeNode } from "./markdown.js";
+import { nodeViews } from "./node-views.js";
+import { plugins } from "./plugins.js";
+import { nodeSpec } from "./schema.js";
 
 /** @type {RichEditorExtension} */
 const extension = {

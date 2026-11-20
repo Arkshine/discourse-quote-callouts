@@ -1002,7 +1002,7 @@ acceptance("Callouts Theme Component", function (needs) {
     await click(".d-editor-preview .callout-chooser-trigger");
     await click('.callout-chooser-row[data-type="warning"]');
 
-    assert.ok(
+    assert.true(
       document.querySelector(".d-editor-input").value.includes("[!warning]"),
       "Textarea now contains [!warning] instead of [!note]"
     );
@@ -1026,9 +1026,9 @@ acceptance("Callouts Theme Component", function (needs) {
     await click('.callout-chooser-row[data-type="tip"]');
 
     const text = document.querySelector(".d-editor-input").value;
-    assert.ok(text.includes("[!note]"), "Outer callout type is unchanged");
-    assert.ok(text.includes("[!tip]"), "Nested callout type changed to tip");
-    assert.notOk(
+    assert.true(text.includes("[!note]"), "Outer callout type is unchanged");
+    assert.true(text.includes("[!tip]"), "Nested callout type changed to tip");
+    assert.false(
       text.includes("[!warning]"),
       "Original nested warning type is removed"
     );

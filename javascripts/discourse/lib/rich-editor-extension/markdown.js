@@ -3,9 +3,9 @@ import {
   DEFAULT_CALLOUT_TYPE,
   findCalloutOptions,
   isReservedCalloutType,
-} from "../config";
-import { splitAtFirstLineBreak, stripPrefix } from "../rich-editor-utils";
-import { capitalizeFirstLetter } from "../utils";
+} from "../config.js";
+import { splitAtFirstLineBreak, stripPrefix } from "../rich-editor-utils.js";
+import { capitalizeFirstLetter } from "../utils.js";
 
 export const parse = {
   blockquote_open(state, token, tokens, i) {

@@ -1,5 +1,5 @@
-import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config";
-import { plugins } from "./plugins";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "../config.js";
+import { plugins } from "./plugins.js";
 
 export const nodeSpec = {
   callout: {

@@ -2,12 +2,12 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
-import DButton from "discourse/components/d-button";
-import icon from "discourse/helpers/d-icon";
 import { or } from "discourse/truth-helpers";
+import DButton from "discourse/ui-kit/d-button";
+import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import { DEFAULT_CALLOUT_TYPE } from "../lib/config";
-import { activeCalloutPosFromView } from "../lib/rich-editor-utils";
+import { DEFAULT_CALLOUT_TYPE } from "../lib/config.js";
+import { activeCalloutPosFromView } from "../lib/rich-editor-utils.js";
 
 export default class CalloutNodeView extends Component {
   @service appEvents;
@@ -46,17 +46,17 @@ export default class CalloutNodeView extends Component {
     );
   }
 
-  onSelectionChanged(pos) {
-    this.activeCalloutPos = pos;
-    this.updateState();
-  }
-
   get isSelected() {
     return this.activeCalloutPos === this.args.getPos();
   }
 
   get showMoveControls() {
     return this.calloutMoveState.isEnabledFor(this.args.getPos());
+  }
+
+  onSelectionChanged(pos) {
+    this.activeCalloutPos = pos;
+    this.updateState();
   }
 
   updateState() {
@@ -117,38 +117,6 @@ export default class CalloutNodeView extends Component {
 
     this.needsInsertAfter =
       !nodeAfter || nodeAfter.type === schema.nodes.callout;
-  }
-
-  #resolveCallout() {
-    const { view } = this.args;
-    const { state } = view;
-    const { schema } = state;
-
-    const calloutPos = this.args.getPos();
-    if (calloutPos == null) {
-      return null;
-    }
-
-    const calloutNode = state.doc.nodeAt(calloutPos);
-    if (!calloutNode) {
-      return null;
-    }
-
-    const $pos = state.doc.resolve(calloutPos);
-    const index = $pos.index($pos.depth);
-
-    return { view, state, schema, calloutPos, calloutNode, $pos, index };
-  }
-
-  #finishMove(tr, newCalloutPos) {
-    const { view } = this.args;
-    const $newPos = tr.doc.resolve(newCalloutPos + 2);
-    tr.setSelection(view.state.selection.constructor.near($newPos));
-
-    this.calloutMoveState.enable(newCalloutPos);
-    view.dispatch(tr.scrollIntoView());
-    view.focus();
-    this.appEvents.trigger("callout:selection-changed", newCalloutPos);
   }
 
   @action
@@ -338,6 +306,38 @@ export default class CalloutNodeView extends Component {
     this.updateState();
   }
 
+  #resolveCallout() {
+    const { view } = this.args;
+    const { state } = view;
+    const { schema } = state;
+
+    const calloutPos = this.args.getPos();
+    if (calloutPos == null) {
+      return null;
+    }
+
+    const calloutNode = state.doc.nodeAt(calloutPos);
+    if (!calloutNode) {
+      return null;
+    }
+
+    const $pos = state.doc.resolve(calloutPos);
+    const index = $pos.index($pos.depth);
+
+    return { view, state, schema, calloutPos, calloutNode, $pos, index };
+  }
+
+  #finishMove(tr, newCalloutPos) {
+    const { view } = this.args;
+    const $newPos = tr.doc.resolve(newCalloutPos + 2);
+    tr.setSelection(view.state.selection.constructor.near($newPos));
+
+    this.calloutMoveState.enable(newCalloutPos);
+    view.dispatch(tr.scrollIntoView());
+    view.focus();
+    this.appEvents.trigger("callout:selection-changed", newCalloutPos);
+  }
+
   <template>
     {{#if this.isSelected}}
       {{#if this.showMoveControls}}
@@ -348,37 +348,37 @@ export default class CalloutNodeView extends Component {
           >
             {{#if this.canMoveUp}}
               <DButton
-                @icon="arrow-up"
-                @action={{this.moveUp}}
                 class="callout-move-btn callout-move-up-btn btn btn-flat btn-small"
-                @translatedTitle={{i18n (themePrefix "composer.menu.move_up")}}
+                @action={{this.moveUp}}
+                @icon="arrow-up"
                 @preventFocus="true"
+                @translatedTitle={{i18n (themePrefix "composer.menu.move_up")}}
               />
             {{/if}}
             {{#if this.canNestUp}}
               <DButton
-                @icon="arrow-up-from-bracket"
-                @action={{this.nestUp}}
                 class="callout-move-btn callout-nest-btn btn btn-flat btn-small"
-                @translatedTitle={{i18n (themePrefix "composer.menu.nest_up")}}
+                @action={{this.nestUp}}
+                @icon="arrow-up-from-bracket"
                 @preventFocus="true"
+                @translatedTitle={{i18n (themePrefix "composer.menu.nest_up")}}
               />
             {{/if}}
           </div>
         {{/if}}
       {{else}}
         <div class="callout-handle" contenteditable="false">
-          {{icon "grip-lines"}}
+          {{dIcon "grip-lines"}}
         </div>
       {{/if}}
       <div class="callout-bottom-controls" contenteditable="false">
         {{#if this.hasEmptyBody}}
           <DButton
-            @icon="callout-add-body"
-            @action={{this.addBody}}
             class="callout-add-body btn btn-flat btn-small"
-            @translatedTitle={{i18n (themePrefix "composer.menu.add_body")}}
+            @action={{this.addBody}}
+            @icon="callout-add-body"
             @preventFocus="true"
+            @translatedTitle={{i18n (themePrefix "composer.menu.add_body")}}
           />
         {{/if}}
 
@@ -386,33 +386,33 @@ export default class CalloutNodeView extends Component {
 
           {{#if this.canMoveDown}}
             <DButton
-              @icon="arrow-down"
-              @action={{this.moveDown}}
               class="callout-move-btn callout-move-down-btn btn btn-flat btn-small"
-              @translatedTitle={{i18n (themePrefix "composer.menu.move_down")}}
+              @action={{this.moveDown}}
+              @icon="arrow-down"
               @preventFocus="true"
+              @translatedTitle={{i18n (themePrefix "composer.menu.move_down")}}
             />
           {{/if}}
           {{#if this.canNestDown}}
             <DButton
-              @icon="arrow-up-from-bracket"
-              @action={{this.nestDown}}
               class="callout-move-btn callout-nest-btn callout-nest-down btn btn-flat btn-small"
-              @translatedTitle={{i18n (themePrefix "composer.menu.nest_down")}}
+              @action={{this.nestDown}}
+              @icon="arrow-up-from-bracket"
               @preventFocus="true"
+              @translatedTitle={{i18n (themePrefix "composer.menu.nest_down")}}
             />
           {{/if}}
         {{/if}}
 
         {{#if this.needsInsertAfter}}
           <DButton
-            @icon="callout-insert-after"
-            @action={{this.insertAfter}}
             class="callout-add-after btn btn-flat btn-small"
+            @action={{this.insertAfter}}
+            @icon="callout-insert-after"
+            @preventFocus="true"
             @translatedTitle={{i18n
               (themePrefix "composer.menu.insert_paragraph_after")
             }}
-            @preventFocus="true"
           />
         {{/if}}
       </div>

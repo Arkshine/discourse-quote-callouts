@@ -1,4 +1,4 @@
-import { findAncestor } from "../rich-editor-utils";
+import { findAncestor } from "../rich-editor-utils.js";
 
 // Some QoL improvements when navigating callouts using arrow keys
 // to make easier to move in and out of nested callouts.

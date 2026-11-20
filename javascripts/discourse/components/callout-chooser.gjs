@@ -2,8 +2,8 @@ import Component from "@glimmer/component";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DMenu from "discourse/float-kit/components/d-menu";
-import iconOrSvg from "../helpers/icon-or-svg";
-import CalloutChooserPanel from "./callout-chooser-panel";
+import iconOrSvg from "../helpers/icon-or-svg.gjs";
+import CalloutChooserPanel from "./callout-chooser-panel.gjs";
 
 export default class CalloutChooser extends Component {
   @service calloutSettings;
@@ -33,15 +33,15 @@ export default class CalloutChooser extends Component {
 
   <template>
     <DMenu
-      @identifier="callout-chooser"
-      @triggerClass="callout-chooser-trigger"
+      ...attributes
       @contentClass="callout-chooser-content"
-      @placement="bottom-start"
       @disabled={{@disabled}}
+      @identifier="callout-chooser"
+      @offset={{2}}
       @onClose={{this.onClose}}
       @onRegisterApi={{this.onRegisterApi}}
-      @offset={{2}}
-      ...attributes
+      @placement="bottom-start"
+      @triggerClass="callout-chooser-trigger"
     >
       <:trigger>
         <span class="callout-icon">
@@ -50,8 +50,8 @@ export default class CalloutChooser extends Component {
       </:trigger>
       <:content>
         <CalloutChooserPanel
-          @selectedType={{@value}}
           @onSelect={{this.onSelect}}
+          @selectedType={{@value}}
         />
       </:content>
     </DMenu>

@@ -1,7 +1,7 @@
-import { htmlSafe } from "@ember/template";
+import { trustHTML } from "@ember/template";
 import { isEmpty } from "@ember/utils";
 import { convertIconClass, iconHTML } from "discourse/lib/icon-library";
-import { createSafeSVG } from "../lib/svg";
+import { createSafeSVG } from "../lib/svg.js";
 
 export default function iconOrSvg(source) {
   if (isEmpty(source)) {
@@ -9,8 +9,8 @@ export default function iconOrSvg(source) {
   }
 
   if (source.startsWith("<svg")) {
-    return htmlSafe(createSafeSVG(source));
+    return trustHTML(createSafeSVG(source));
   }
 
-  return htmlSafe(iconHTML(convertIconClass(source)));
+  return trustHTML(iconHTML(convertIconClass(source)));
 }

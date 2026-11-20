@@ -35,7 +35,7 @@ export function toggleCalloutCollapse(element, isCollapsing, onUpdate) {
 
   if (isCollapsing) {
     element.style.height = element.scrollHeight + "px";
-    element.offsetHeight; // reflow
+    void element.offsetHeight; // reflow
     element.style.height = "0px";
   }
 

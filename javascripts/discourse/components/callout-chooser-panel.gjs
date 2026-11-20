@@ -7,16 +7,16 @@ import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import { next } from "@ember/runloop";
 import { service } from "@ember/service";
 import { trustHTML } from "@ember/template";
-import DButton from "discourse/components/d-button";
-import DropdownMenu from "discourse/components/dropdown-menu";
-import TextField from "discourse/components/text-field";
-import concatClass from "discourse/helpers/concat-class";
-import icon from "discourse/helpers/d-icon";
-import scrollIntoView from "discourse/modifiers/scroll-into-view";
 import { eq } from "discourse/truth-helpers";
+import DButton from "discourse/ui-kit/d-button";
+import DDropdownMenu from "discourse/ui-kit/d-dropdown-menu";
+import DTextField from "discourse/ui-kit/d-text-field";
+import dConcatClass from "discourse/ui-kit/helpers/d-concat-class";
+import dIcon from "discourse/ui-kit/helpers/d-icon";
+import dScrollIntoView from "discourse/ui-kit/modifiers/d-scroll-into-view";
 import { i18n } from "discourse-i18n";
-import iconOrSvg from "../helpers/icon-or-svg";
-import { hexToRGBA } from "../lib/utils";
+import iconOrSvg from "../helpers/icon-or-svg.gjs";
+import { hexToRGBA } from "../lib/utils.js";
 
 export default class CalloutChooserPanel extends Component {
   @service calloutSettings;
@@ -97,22 +97,22 @@ export default class CalloutChooserPanel extends Component {
   <template>
     <div class="callout-chooser-panel">
       <div class="callout-chooser-search">
-        <TextField
+        <DTextField
           autocomplete="off"
           @placeholder={{i18n (themePrefix "composer.menu.search")}}
           @type="search"
+          @value={{readonly this.searchTerm}}
           {{on "input" this.search}}
           {{on "keydown" this.handleKeydown}}
           {{didInsert this.focus}}
-          @value={{readonly this.searchTerm}}
         />
-        {{icon "magnifying-glass"}}
+        {{dIcon "magnifying-glass"}}
       </div>
-      <DropdownMenu class="callout-chooser-list" as |menu|>
+      <DDropdownMenu class="callout-chooser-list" as |menu|>
         {{#each this.filteredCallouts as |callout index|}}
           <menu.item>
             <DButton
-              class={{concatClass
+              class={{dConcatClass
                 "callout-chooser-row"
                 (if (eq callout.type @selectedType) "is-selected")
                 (if (eq index this.selectedTypeIndex) "is-highlighted")
@@ -120,7 +120,7 @@ export default class CalloutChooserPanel extends Component {
               data-type={{callout.type}}
               style={{this.calloutColorStyle callout.color}}
               @action={{fn this.selectType callout.type}}
-              {{scrollIntoView (eq index this.selectedTypeIndex)}}
+              {{dScrollIntoView (eq index this.selectedTypeIndex)}}
             >
               <span class="callout-chooser-row__icon">
                 {{iconOrSvg callout.icon}}
@@ -131,7 +131,7 @@ export default class CalloutChooserPanel extends Component {
             </DButton>
           </menu.item>
         {{/each}}
-      </DropdownMenu>
+      </DDropdownMenu>
     </div>
   </template>
 }

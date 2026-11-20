@@ -1,5 +1,5 @@
-import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "./config";
-import { capitalizeFirstLetter } from "./utils";
+import { DEFAULT_CALLOUT_TYPE, findCalloutOptions } from "./config.js";
+import { capitalizeFirstLetter } from "./utils.js";
 
 /**
  * Checks if the cursor is at the start of a block.
