@@ -4,7 +4,7 @@ import { service } from "@ember/service";
 import { convertIconClass, iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
-import Callout from "../components/callout";
+import CalloutChooser from "../components/callout-chooser";
 import CalloutChooserPanel from "../components/callout-chooser-panel";
 import {
   CALLOUT_EXCERPT_REGEX,
@@ -20,10 +20,19 @@ import {
   hexToRGBA,
   isNodeEmpty,
   leadingTextFromNode,
+  toggleCalloutCollapse,
 } from "../lib/utils";
 
 const ONEBOX_SELECTOR = "aside.onebox, aside.quote[data-topic]";
 const PENDING_ONEBOX_SELECTOR = "a.onebox";
+
+const PreviewTypeChooser = <template>
+  <CalloutChooser
+    @value={{@data.type}}
+    @onChange={{@data.onChange}}
+    class="btn-transparent"
+  />
+</template>;
 
 class QuoteCallouts {
   @service calloutSettings;
@@ -276,9 +285,10 @@ class QuoteCallouts {
     }
   }
 
-  buildStaticCallout(tree) {
+  buildStaticCallout(tree, { helper } = {}) {
     const options = this.calloutSettings.find(tree.type);
-    const resolvedType = options?.mainType || options?.type || tree.type;
+    const resolvedType =
+      options?.mainType || options?.type || DEFAULT_CALLOUT_TYPE;
     const alias = options?.type ? tree.type : resolvedType;
     const iconSource = options?.icon || settings.callout_fallback_icon;
     const color = options?.color || settings.callout_fallback_color;
@@ -296,6 +306,12 @@ class QuoteCallouts {
     const titleElement = document.createElement("div");
     titleElement.className = "callout-title";
 
+    const isCollapsible =
+      !!helper && ["-", "+"].includes(tree.fold) && tree.children?.length > 0;
+    const isCollapsed = isCollapsible && tree.fold === "-";
+    bq.classList.toggle("is-collapsible", isCollapsible);
+    bq.classList.toggle("is-collapsed", isCollapsed);
+
     if (tree.previousType) {
       const prevOptions = this.calloutSettings.find(tree.previousType);
       const prevIconSource =
@@ -311,7 +327,16 @@ class QuoteCallouts {
       }
     }
 
-    if (iconSource) {
+    if (helper && tree.isPreview) {
+      const chooserSlot = document.createElement("span");
+      chooserSlot.className = "callout-chooser-slot";
+      titleElement.append(chooserSlot);
+      helper.renderGlimmer(chooserSlot, PreviewTypeChooser, {
+        type: resolvedType,
+        onChange: (newType) =>
+          this.changePreviewCalloutType(tree.calloutIndex, newType),
+      });
+    } else if (iconSource) {
       const iconElement = document.createElement("span");
       iconElement.className = tree.previousType
         ? "callout-icon callout-icon--new"
@@ -337,13 +362,14 @@ class QuoteCallouts {
     titleElement.append(titleInner);
     bq.append(titleElement);
 
+    let content;
     if (tree.children?.length) {
-      const content = document.createElement("div");
+      content = document.createElement("div");
       content.className = "callout-content";
 
       for (const child of tree.children) {
         if (child.isCallout) {
-          content.append(this.buildStaticCallout(child));
+          content.append(this.buildStaticCallout(child, { helper }));
         } else if (child.content) {
           content.append(child.content);
         }
@@ -352,7 +378,59 @@ class QuoteCallouts {
       bq.append(content);
     }
 
+    if (isCollapsible) {
+      const fold = document.createElement("span");
+      fold.className = "callout-fold";
+      fold.classList.toggle("is-collapsed", isCollapsed);
+      fold.innerHTML = iconHTML("chevron-down");
+      titleElement.append(fold);
+
+      titleElement.addEventListener("mousedown", (event) => {
+        // Prevents text selection on double click
+        if (event.detail > 1) {
+          event.preventDefault();
+        }
+      });
+      titleElement.addEventListener("click", () => {
+        const isCollapsing = !bq.classList.contains("is-collapsed");
+        toggleCalloutCollapse(content, isCollapsing, (collapsed) => {
+          bq.classList.toggle("is-collapsed", collapsed);
+          fold.classList.toggle("is-collapsed", collapsed);
+        });
+      });
+    }
+
     return bq;
+  }
+
+  changePreviewCalloutType(calloutIndex, newType) {
+    const textarea = document.querySelector(".d-editor-input");
+    if (!textarea) {
+      return;
+    }
+
+    const text = textarea.value;
+    const markerRegex = /\[!([^\]]+)\]/gim;
+    let match;
+    let count = 0;
+
+    while ((match = markerRegex.exec(text)) !== null) {
+      const lineStart = text.lastIndexOf("\n", match.index - 1) + 1;
+      const prefix = text.substring(lineStart, match.index);
+      if (!/^(?:>[ \t]*)+$/.test(prefix)) {
+        continue;
+      }
+
+      if (count === calloutIndex) {
+        const newMarker = `[!${newType}]`;
+
+        textarea.setSelectionRange(match.index, match.index + match[0].length);
+        textarea.focus();
+        document.execCommand("insertText", false, newMarker);
+        break;
+      }
+      count++;
+    }
   }
 
   processCookedElement(element, helper, { isChat = false } = {}) {
@@ -383,11 +461,10 @@ class QuoteCallouts {
         this.assignPreviewMetadata(calloutTrees, calloutCounter);
       }
 
-      const { root } = calloutTrees;
-      const container = document.createElement("div");
-
-      root.replaceWith(container);
-      helper.renderGlimmer(container, Callout, { ...calloutTrees });
+      // Built synchronously so later decorators still reach the content.
+      calloutTrees.root.replaceWith(
+        this.buildStaticCallout(calloutTrees, { helper })
+      );
     }
   }
 
