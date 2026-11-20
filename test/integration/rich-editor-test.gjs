@@ -19,6 +19,7 @@ import {
   assertCursorInBody,
   callHandleClick,
   findNode,
+  gapCursorAt,
   insertEmptyParagraphAt,
   isInsideNode,
   setCursorInNode,
@@ -127,6 +128,20 @@ module(
         markdown
       );
     });
+
+    for (const [name, markdown] of Object.entries({
+      wrap: "> [!note] Title\n> [wrap=box]\n> inside\n>\n> [/wrap]\n>\n> after",
+      quote: "> [!note] Title\n> [quote]\n> inside\n>\n> [/quote]\n>\n> after",
+    })) {
+      test(`${name} block keeps the callout whole`, async function (assert) {
+        await testMarkdown(
+          assert,
+          markdown,
+          () => assert.dom(".ProseMirror .callout").exists({ count: 1 }),
+          markdown
+        );
+      });
+    }
 
     test("unknown callout type falls back to configured fallback", async function (assert) {
       await testMarkdown(
@@ -1121,6 +1136,77 @@ module(
     setupRenderingTest(hooks);
     setupCalloutSettings(hooks);
 
+    test("Backspace at title start keeps the title inside and selects the callout", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "Before\n\n> [!note] Title\n> Body"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(
+        findNode(view, "callout_title").node.textContent,
+        "Title"
+      );
+      assert.strictEqual(view.state.doc.firstChild.textContent, "Before");
+      assert.strictEqual(view.state.selection.node?.type.name, "callout");
+    });
+
+    test("Backspace at title start of a blank callout removes it", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "Before\n\n> [!note]"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(findNode(view, "callout"), null);
+      assert.strictEqual(view.state.doc.firstChild.textContent, "Before");
+    });
+
+    test("Backspace in the empty first body line removes it and returns to the title", async function (assert) {
+      const [editorClass] = await setupRichEditor(assert, "> [!note] Title");
+      const { view } = editorClass;
+
+      const body = findNode(view, "callout_body");
+      insertEmptyParagraphAt(view, body.pos + 1);
+      setCursorInNode(view, "paragraph", (n) => n.content.size === 0);
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(findNode(view, "callout_body").node.childCount, 0);
+      assert.true(isInsideNode(view.state.selection, "callout_title"));
+      assert.strictEqual(view.state.selection.$from.parentOffset, 5);
+    });
+
+    test("Backspace at the start of a non-empty first body line moves to the title", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note] Title\n> Body"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_body");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "Backspace");
+
+      assert.strictEqual(
+        findNode(view, "callout_title").node.textContent,
+        "Title"
+      );
+      assert.strictEqual(
+        findNode(view, "callout_body").node.textContent,
+        "Body"
+      );
+      assert.true(isInsideNode(view.state.selection, "callout_title"));
+    });
+
     test("Enter in title moves cursor into the callout body", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
@@ -1222,7 +1308,7 @@ module(
       );
     });
 
-    test("ArrowDown at end of inner callout body inserts paragraph inside outer callout", async function (assert) {
+    test("ArrowDown at end of inner callout body shows a gap cursor inside outer callout", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> Outer\n> > [!tip]\n> > Inner content"
@@ -1236,31 +1322,9 @@ module(
           parent?.type.name === "callout" && parent.attrs.type === "tip"
       );
       await settled();
-
-      const outerCallout = findNode(
-        view,
-        "callout",
-        (n) => n.attrs.type === "note"
-      );
-      const bodyBefore = outerCallout.node.child(1).childCount;
-
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowDown");
 
-      const outerCalloutAfter = findNode(
-        view,
-        "callout",
-        (n) => n.attrs.type === "note"
-      );
-      const bodyAfter = outerCalloutAfter.node.child(1).childCount;
-
-      assert.true(
-        bodyAfter > bodyBefore,
-        "a new paragraph was added inside the outer callout"
-      );
-      assert.true(
-        isInsideNode(view.state.selection, "callout"),
-        "cursor is still inside a callout"
-      );
+      assert.strictEqual(gapCursorAt(view), "callout_body: callout | end");
     });
 
     test("ArrowDown from trailing empty paragraph does not insert duplicate when content follows", async function (assert) {
@@ -1398,7 +1462,7 @@ module(
       );
     });
 
-    test("ArrowUp from content below callout inserts paragraph when body ends with nested callout", async function (assert) {
+    test("ArrowUp from below a callout ending with a nested callout shows a gap cursor", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> content\n> > [!abstract]\n\nText"
@@ -1409,17 +1473,35 @@ module(
       await settled();
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
 
-      const outerBody = findNode(view, "callout_body");
-      const lastChild = outerBody.node.lastChild;
-      assert.strictEqual(
-        lastChild?.type.name,
-        "paragraph",
-        "a paragraph was inserted at the end of the outer callout body"
+      assert.strictEqual(gapCursorAt(view), "callout_body: callout | end");
+    });
+
+    test("ArrowUp from below a callout ending with a block shows a gap cursor", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note]\n> content\n> [wrap=box]\n> inside\n> [/wrap]\n\nText"
       );
-      assert.true(
-        isInsideNode(view.state.selection, "callout_body"),
-        "cursor is inside the callout body"
+      const { view } = editorClass;
+
+      setCursorInNode(view, "text", (n) => n.text === "Text");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
+
+      assert.strictEqual(gapCursorAt(view), "callout_body: wrap_block | end");
+    });
+
+    test("ArrowDown from title shows a gap cursor when body starts with a block", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note] Title\n> [wrap=box]\n> inside\n> [/wrap]"
       );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "callout_title");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowDown");
+
+      assert.strictEqual(gapCursorAt(view), "callout_body: start | wrap_block");
     });
 
     test("ArrowUp from empty paragraph enters nested callout even when non-callout content exists above", async function (assert) {
@@ -1476,7 +1558,7 @@ module(
       );
     });
 
-    test("ArrowUp cleans up parent empty paragraph when entering child callout", async function (assert) {
+    test("ArrowUp from an empty paragraph after a nested callout shows a gap cursor", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> > [!tip]\n> > > [!example]\n> > > Nested"
@@ -1487,27 +1569,16 @@ module(
       insertEmptyParagraphAt(view, outerBody.pos + outerBody.node.nodeSize - 1);
       await settled();
 
-      const outerBodyBefore = findNode(view, "callout_body");
-      assert.strictEqual(
-        outerBodyBefore.node.childCount,
-        2,
-        "outer body has tip callout + empty paragraph"
-      );
-
       setCursorInNode(view, "paragraph", (n) => n.content.size === 0);
       await settled();
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
 
-      const outerBodyAfter = findNode(view, "callout_body");
       assert.strictEqual(
-        outerBodyAfter.node.childCount,
-        1,
-        "empty paragraph was removed from outer body"
+        findNode(view, "callout_body").node.childCount,
+        2,
+        "the empty paragraph is kept"
       );
-      assert.true(
-        isInsideNode(view.state.selection, "callout_body"),
-        "cursor entered the nested callout body"
-      );
+      assert.strictEqual(gapCursorAt(view), "callout_body: callout | end");
     });
 
     test("ArrowDown does not exit callout when nested content exists below cursor", async function (assert) {
@@ -1584,33 +1655,32 @@ module(
     setupRenderingTest(hooks);
     setupCalloutSettings(hooks);
 
-    test("clicking after a nested callout inside body inserts a paragraph", async function (assert) {
+    test("clicking after a nested callout inside body shows a gap cursor", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> Outer\n> > [!tip]\n> > Inner"
       );
       const { view } = editorClass;
 
-      const innerCallout = findNode(
-        view,
-        "callout",
-        (n) => n.attrs.type === "tip"
-      );
-      assert.notStrictEqual(innerCallout, null, "found inner callout");
-
-      const posAfterInner = innerCallout.pos + innerCallout.node.nodeSize;
-
-      const outerBody = findNode(view, "callout_body");
-      const childCountBefore = outerBody.node.childCount;
-
-      callHandleClick(view, posAfterInner);
+      const inner = findNode(view, "callout", (n) => n.attrs.type === "tip");
+      callHandleClick(view, inner.pos + inner.node.nodeSize);
       await settled();
 
-      const outerBodyAfter = findNode(view, "callout_body");
-      assert.true(
-        outerBodyAfter.node.childCount > childCountBefore,
-        "a paragraph was inserted after the nested callout"
+      assert.strictEqual(gapCursorAt(view), "callout_body: callout | end");
+    });
+
+    test("clicking after a block at the end of the body shows a gap cursor", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note]\n> Outer\n> [wrap=box]\n> inside\n> [/wrap]"
       );
+      const { view } = editorClass;
+
+      const wrap = findNode(view, "wrap_block");
+      callHandleClick(view, wrap.pos + wrap.node.nodeSize);
+      await settled();
+
+      assert.strictEqual(gapCursorAt(view), "callout_body: wrap_block | end");
     });
 
     test("clicking does not insert a duplicate when an empty paragraph already exists after nested callout", async function (assert) {

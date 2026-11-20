@@ -363,3 +363,64 @@ export function handleArrowLeft({ view, $from, schema, state }) {
 
   return false;
 }
+
+export function handleBackspace(
+  state,
+  dispatch,
+  { NodeSelection, TextSelection }
+) {
+  const { $from, empty } = state.selection;
+  if (!empty || $from.parentOffset > 0 || $from.depth < 2) {
+    return false;
+  }
+
+  const {
+    callout_title: titleType,
+    callout_body: bodyType,
+    paragraph,
+  } = state.schema.nodes;
+  const container = $from.node($from.depth - 1);
+
+  if ($from.parent.type === titleType) {
+    const calloutPos = $from.before($from.depth - 1);
+    const body =
+      container.lastChild?.type === bodyType ? container.lastChild : null;
+    const isBlank =
+      (!container.attrs.hasCustomTitle || $from.parent.content.size === 0) &&
+      (!body ||
+        body.childCount === 0 ||
+        (body.childCount === 1 && body.firstChild.content.size === 0));
+
+    if (dispatch) {
+      const tr = state.tr;
+      if (isBlank) {
+        tr.replaceWith(
+          calloutPos,
+          calloutPos + container.nodeSize,
+          paragraph.create()
+        );
+        tr.setSelection(TextSelection.create(tr.doc, calloutPos + 1));
+      } else {
+        tr.setSelection(NodeSelection.create(tr.doc, calloutPos));
+      }
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  }
+
+  if (container.type === bodyType && $from.index($from.depth - 1) === 0) {
+    const titleEnd = $from.before($from.depth - 1) - 1;
+
+    if (dispatch) {
+      const tr = state.tr;
+      if ($from.parent.content.size === 0) {
+        tr.delete($from.before(), $from.after());
+      }
+      tr.setSelection(TextSelection.create(tr.doc, titleEnd));
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  }
+
+  return false;
+}
