@@ -543,6 +543,26 @@ acceptance("Callouts Theme Component", function (needs) {
       );
   });
 
+  test("callout inside topic quote", async function (assert) {
+    await visitAndCreate(
+      '[quote="eviltrout, post:1, topic:280"]\n> [!tip] Title\n> Body\n[/quote]'
+    );
+
+    assert
+      .dom("aside.quote[data-topic] .callout[data-callout-type='tip']")
+      .exists();
+    assert.dom(".quote .callout-title").hasText("Title");
+  });
+
+  test("marker is stripped from topic onebox", async function (assert) {
+    await visitAndCreate(
+      '<aside class="quote" data-post="1" data-topic="280">\n<blockquote>\n\n[!tip] Excerpt\n\n</blockquote>\n</aside>'
+    );
+
+    assert.dom("aside.quote[data-topic] blockquote").hasText("Excerpt");
+    assert.dom(".d-editor-preview .callout").doesNotExist();
+  });
+
   test("deeply nested quotes within callout", async function (assert) {
     await visitAndCreate(FIXTURES.DEEPLY_NESTED_QUOTES);
 
