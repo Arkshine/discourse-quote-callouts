@@ -186,10 +186,12 @@ module(
       });
     }
 
-    test("lowercase AI marker stays outside Quote Callouts", async function (assert) {
-      await setupRichEditor(assert, "> [!ai]\n> AI-generated content");
-      assert.dom(".composer-callout-node").doesNotExist();
-    });
+    for (const marker of ["[!ai]", "[!AI] Title", "[!AI]-"]) {
+      test(`${marker} is a callout`, async function (assert) {
+        await setupRichEditor(assert, `> ${marker}\n> Content`);
+        assert.dom(".composer-callout-node").exists();
+      });
+    }
 
     test("unknown callout type falls back to configured fallback", async function (assert) {
       await testMarkdown(
