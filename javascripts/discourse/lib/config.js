@@ -1,16 +1,16 @@
 import { isTesting } from "discourse/lib/environment";
 import { capitalizeFirstLetter } from "./utils.js";
 
-// Discourse core owns [!ai] markers for AI content attribution.
-// Do not strip those markers from quotes or excerpts.
-export const CALLOUT_EXCERPT_REGEX = /\[!(?!ai\])[^\]]+\][+-]? */gim;
+export const CALLOUT_EXCERPT_REGEX = /\[![^\]]+\][+-]? */gm;
 export const CALLOUT_REGEX =
   /^(?<marker>\[!(?<callout>[^\]]+)\](?<fold>[+-])?\s*?)(?<title>.*)?/;
-export const CALLOUT_MARKER_REGEX = /\[!(?!ai\])[^\]]+\]/i;
+export const CALLOUT_MARKER_REGEX = /\[!(?!AI\])[^\]]+\]/;
 export const CALLOUT_CONTROLS_META = "callout:controls";
 
-export function isReservedCalloutType(type) {
-  return type?.toLowerCase() === "ai";
+// Core turns a quote whose first line is exactly "[!AI]" into an AI quote.
+export function isAiQuoteMarker(match) {
+  const { callout, fold, title } = match?.groups ?? {};
+  return callout === "AI" && !fold && !title?.trim();
 }
 
 // Default callout type when callout_fallback_type is not set
@@ -35,9 +35,6 @@ function buildCalloutData(callouts) {
       .filter(Boolean);
 
     const type = callout.type.trim().toLowerCase();
-    if (isReservedCalloutType(type)) {
-      continue;
-    }
     const title = callout.title?.trim();
     const hasExplicitTitle = Boolean(title);
 
@@ -50,9 +47,7 @@ function buildCalloutData(callouts) {
       hasExplicitTitle,
     });
 
-    for (const alias of aliases.filter(
-      (value) => !isReservedCalloutType(value)
-    )) {
+    for (const alias of aliases) {
       entries.push({
         ...callout,
         type: alias,
@@ -68,9 +63,6 @@ function buildCalloutData(callouts) {
 }
 
 export function findCalloutOptions(type) {
-  if (isReservedCalloutType(type)) {
-    return;
-  }
   return getCalloutData().find(
     (callout) => callout.type === type?.toLowerCase()
   );
