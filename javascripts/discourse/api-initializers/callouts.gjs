@@ -23,7 +23,8 @@ import {
   toggleCalloutCollapse,
 } from "../lib/utils";
 
-const ONEBOX_SELECTOR = "aside.onebox, aside.quote[data-topic]";
+const ONEBOX_SELECTOR =
+  "aside.onebox, aside.quote[data-topic]:not([data-username])";
 const PENDING_ONEBOX_SELECTOR = "a.onebox";
 
 const PreviewTypeChooser = <template>
@@ -143,7 +144,25 @@ class QuoteCallouts {
           }
 
           // `value` may be a TrustedHTML wrapper. Template re-wraps via `trustHTML`.
-          return value.toString().replace(CALLOUT_EXCERPT_REGEX, "");
+          const template = document.createElement("template");
+          template.innerHTML = value.toString();
+
+          const walker = document.createTreeWalker(
+            template.content,
+            NodeFilter.SHOW_TEXT
+          );
+          let node;
+          while ((node = walker.nextNode())) {
+            // Quoted callouts keep their marker for the decorator.
+            if (!node.parentElement?.closest("blockquote")) {
+              node.nodeValue = node.nodeValue.replace(
+                CALLOUT_EXCERPT_REGEX,
+                ""
+              );
+            }
+          }
+
+          return template.innerHTML;
         }
       };
     });
