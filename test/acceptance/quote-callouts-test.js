@@ -366,10 +366,27 @@ acceptance("Callouts Theme Component", function (needs) {
       .exists("the native AI badge is preserved in the Markdown preview");
   });
 
-  test("lowercase AI content marker is left to Discourse core", async function (assert) {
-    await visitAndCreate("> [!ai]\n> AI-generated content");
+  for (const marker of ["[!ai]", "[!AI] Title", "[!AI]-"]) {
+    test(`${marker} is a callout`, async function (assert) {
+      await visitAndCreate(`> ${marker}\n> Content`);
 
-    assert.dom(".callout").doesNotExist("lowercase AI marker is not a callout");
+      assert
+        .dom(".d-editor-preview .callout")
+        .exists("core only takes a bare [!AI] line");
+    });
+  }
+
+  test("ai type from settings is kept", async function (assert) {
+    settings.callouts = [
+      ...settings.callouts,
+      { type: "ai", alias: "", icon: "robot", title: "", color: "#888888" },
+    ];
+    await visitAndCreate("> [!ai]\n> Content\n\n> [!AI]\n> Generated");
+
+    assert.dom(".callout[data-callout-type='ai'] .d-icon-robot").exists();
+    assert
+      .dom(".d-editor-preview blockquote[data-ai-generated='true'] > .ai-badge")
+      .exists("bare [!AI] is still left to core");
   });
 
   test("fallback behavior", async function (assert) {
@@ -962,6 +979,17 @@ acceptance("Callouts Theme Component", function (needs) {
       "Content here",
       "hyphenated callout type is stripped"
     );
+  });
+
+  test("escapedExcerpt strips AI callout marker", function (assert) {
+    const store = this.owner.lookup("service:store");
+    const topic = store.createRecord("topic", {
+      excerpt: "[!AI] Title",
+      pinned: true,
+    });
+
+    // Core removes a bare [!AI] line before excerpts are built.
+    assert.strictEqual(topic.escapedExcerpt, "Title");
   });
 
   test("escapedExcerpt preserves non-callout brackets", function (assert) {

@@ -10,7 +10,7 @@ import {
   CALLOUT_EXCERPT_REGEX,
   CALLOUT_REGEX,
   DEFAULT_CALLOUT_TYPE,
-  isReservedCalloutType,
+  isAiQuoteMarker,
 } from "../lib/config.js";
 import richEditorExtension from "../lib/rich-editor-extension/index.js";
 import { createSafeSVG } from "../lib/svg.js";
@@ -551,14 +551,11 @@ class QuoteCallouts {
 
     // Matches [!<callout>]<fold>? <title>?
     const match = leading.match(CALLOUT_REGEX);
-    if (!match) {
+    if (!match || isAiQuoteMarker(match)) {
       return null;
     }
 
     const type = match.groups.callout.toLowerCase() || DEFAULT_CALLOUT_TYPE;
-    if (isReservedCalloutType(type)) {
-      return null;
-    }
     const fold = match.groups.fold || "";
     const title = match.groups.title?.trim() || "";
 

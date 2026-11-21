@@ -1,11 +1,8 @@
-import { DEFAULT_CALLOUT_TYPE, isReservedCalloutType } from "../config.js";
+import { DEFAULT_CALLOUT_TYPE } from "../config.js";
 import { buildCallout } from "../rich-editor-utils.js";
 
 export const inputRules = () => {
   function calloutInputHandler(state, type, start, end) {
-    if (isReservedCalloutType(type)) {
-      return null;
-    }
     const callout = buildCallout(state.schema, type);
 
     const insertPos = start - 1;

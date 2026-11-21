@@ -1,7 +1,7 @@
 import {
   CALLOUT_REGEX,
   findCalloutOptions,
-  isReservedCalloutType,
+  isAiQuoteMarker,
 } from "../config.js";
 import { capitalizeFirstLetter } from "../utils.js";
 
@@ -43,7 +43,7 @@ function convertBlockquoteToCallout(blockquote, schema) {
     firstPara?.type === schema.nodes.paragraph &&
     firstPara.textContent.match(CALLOUT_REGEX);
 
-  if (!match || isReservedCalloutType(match.groups.callout)) {
+  if (!match || isAiQuoteMarker(match)) {
     return null;
   }
 

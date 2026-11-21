@@ -12,7 +12,9 @@ en:
           properties:
             type:
               label: Type
-              description: The type of the callout.
+              description: >
+                The type of the callout.<br>
+                Note: <tt>[!AI]</tt> is reserved by Discourse for AI-generated content.
             alias:
               label: Alias
               description: >
