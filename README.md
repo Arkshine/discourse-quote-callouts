@@ -9,6 +9,8 @@ To create a callout, add `[!type]` to the first line of a quote, where `type` is
 
 > ℹ️ The type identifier is case-insensitive.
 
+> ℹ️ `[!AI]` is left to Discourse, which marks it as AI-generated content.
+
 ```markdown
 > [!tip]
 > **Tip**: Use `code snippets` to enhance readability. They provide clarity and precision.
