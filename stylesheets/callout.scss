@@ -91,6 +91,13 @@
     &.is-clipped {
       overflow-y: clip;
     }
+
+    // Collapses with the first child margin, so blocks without one keep the gap.
+    &:has(> *)::before {
+      content: "";
+      display: block;
+      margin-top: 1em;
+    }
   }
 
   &.is-collapsed > .callout-content {
