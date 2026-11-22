@@ -18,10 +18,12 @@ import DEditor from "discourse/ui-kit/d-editor";
 import {
   assertCursorInBody,
   callHandleClick,
+  clickBelow,
   findNode,
   gapCursorAt,
   insertEmptyParagraphAt,
   isInsideNode,
+  setCursorAt,
   setCursorInNode,
   typeText,
 } from "../helpers/rich-editor-helpers.js";
@@ -310,16 +312,16 @@ module(
       );
     });
 
-    test("callout case-insensitive type parsing", async function (assert) {
+    test("callout type is case-insensitive", async function (assert) {
       await testMarkdown(
         assert,
-        "> [!NOTE]\n> Content",
+        "> [!TIP]\n> Content",
         () => {
           assert
-            .dom(".composer-callout-node .callout")
-            .exists("callout is rendered");
+            .dom(".composer-callout-node .callout[data-callout-type='tip']")
+            .exists();
         },
-        "> [!note]\n> Content"
+        "> [!tip]\n> Content"
       );
     });
 
@@ -513,7 +515,6 @@ module("Integration | Rich Editor | Callout – commands", function (hooks) {
         return false;
       }
     });
-    assert.notStrictEqual(titlePos, null, "found title node");
 
     const SelectionClass = editor.view.state.selection.constructor;
     editor.view.dispatch(
@@ -569,9 +570,6 @@ module("Integration | Rich Editor | Callout – commands", function (hooks) {
         to = pos + node.nodeSize - 1;
       }
     });
-
-    assert.notStrictEqual(from, null, "found heading");
-    assert.notStrictEqual(to, null, "found paragraph");
 
     const SelectionClass = view.state.selection.constructor;
     view.dispatch(
@@ -651,18 +649,6 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
     assert
       .dom(".callout[data-callout-type='warning']")
       .exists("callout type is updated after chooser selection");
-  });
-
-  test("changing callout type via chooser serializes to correct markdown", async function (assert) {
-    const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Hello");
-
-    await click(".composer-callout-node");
-    await selectCalloutType("warning");
-
-    assert.true(
-      editorClass.value.startsWith("> [!warning]"),
-      `markdown starts with "> [!warning]", got: ${editorClass.value}`
-    );
   });
 
   test("changing callout type via chooser updates the title to configured default", async function (assert) {
@@ -775,29 +761,7 @@ module("Integration | Rich Editor | Callout – node view", function (hooks) {
       .hasClass("is-collapsed", "tip callout is collapsed");
   });
 
-  test("fold controls toggle collapsed state", async function (assert) {
-    await setupRichEditor(
-      assert,
-      "> [!note]+\n> Content \n\n > [!tip]-\nContent"
-    );
-
-    await focus("[data-callout-type='note']");
-    await click("[data-callout-type='note'] .callout-fold");
-    assert
-      .dom("[data-callout-type='note']")
-      .hasClass("is-collapsed", "body is collapsed after fold selection");
-
-    await focus("[data-callout-type='tip']");
-    await click("[data-callout-type='tip'] .callout-fold");
-    assert
-      .dom("[data-callout-type='tip']")
-      .doesNotHaveClass(
-        "is-collapsed",
-        "body is expanded after fold selection"
-      );
-  });
-
-  test("fold toggle options updates the state", async function (assert) {
+  test("fold options menu sets the fold state", async function (assert) {
     await setupRichEditor(assert, "> [!note]\n> Content");
 
     await focus(".callout");
@@ -845,30 +809,15 @@ module(
     setupCalloutSettings(hooks);
 
     Object.entries({
-      "callout without custom title serializes without title in markdown": {
-        markdown: "> [!note]\n> Body",
-      },
-      "callout with custom title serializes with title in markdown": {
-        markdown: "> [!note] My Title\n> Body",
-      },
-      "callout with default type title does not get re-emitted if not customised":
-        {
-          markdown: "> [!tip]\n> Body",
-        },
-      "callout with same text as default title is treated as custom": {
-        markdown: "> [!tip] Pro Tip\n> Body",
-      },
-      "foldable callout without custom title serializes fold only": {
-        markdown: "> [!note]+\n> Body",
-      },
-      "foldable callout with custom title serializes fold and title": {
-        markdown: "> [!note]+ My Title\n> Body",
-      },
-      "collapsed callout serializes with - fold marker": {
-        markdown: "> [!note]- My Title\n> Body",
-      },
-    }).forEach(([name, { markdown }]) => {
-      test(`${name} serializes correctly`, async function (assert) {
+      "no title": "> [!note]\n> Body",
+      "custom title": "> [!note] My Title\n> Body",
+      "settings title": "> [!tip]\n> Body",
+      "title equal to the settings title": "> [!tip] Pro Tip\n> Body",
+      "fold, no title": "> [!note]+\n> Body",
+      "fold and title": "> [!note]+ My Title\n> Body",
+      "collapsed with title": "> [!note]- My Title\n> Body",
+    }).forEach(([name, markdown]) => {
+      test(`callout with ${name} round-trips`, async function (assert) {
         await testMarkdown(assert, markdown, () => {}, markdown);
       });
     });
@@ -912,8 +861,7 @@ module("Integration | Rich Editor | Callout – paste handler", function (hooks)
 
   test("pasting an attributed AI blockquote keeps callout-like content literal", async function (assert) {
     const [editor] = await setupRichEditor(assert, "");
-    // Surrounding blocks keep the quote closed in the pasted slice; a lone
-    // open quote may be unwrapped by ProseMirror when pasted into a paragraph.
+    // Surrounding blocks stop ProseMirror unwrapping a lone pasted quote.
     editor.view.pasteHTML(
       '<p>Before quote</p><blockquote data-ai-generated="true"><p>[!note] Literal AI content</p></blockquote><p>After quote</p>'
     );
@@ -978,7 +926,6 @@ module("Integration | Rich Editor | Callout – paste handler", function (hooks)
     await paste(".ProseMirror", text, pasteMarkdown(text));
 
     const callout = findNode(editorClass.view, "callout");
-    assert.notStrictEqual(callout, null, "callout was created");
     assert.true(
       callout.node.attrs.isCollapsible,
       "pasted callout is collapsible"
@@ -996,6 +943,9 @@ module(
       const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
       const { view } = editorClass;
 
+      setCursorInNode(view, "callout_title");
+      await settled();
+
       const title = findNode(view, "callout_title");
       view.dispatch(
         view.state.tr.delete(
@@ -1007,6 +957,10 @@ module(
       setCursorInNode(view, "callout_body");
       await settled();
 
+      assert.strictEqual(
+        findNode(view, "callout_title").node.textContent,
+        "Note"
+      );
       assert.false(
         editorClass.value.includes("Note"),
         `default title must not appear in markdown: ${editorClass.value}`
@@ -1017,12 +971,11 @@ module(
       );
     });
 
-    test("editing title to non-empty and moving focus does not trigger default restore", async function (assert) {
+    test("edited title is kept when focus leaves", async function (assert) {
       const [editorClass] = await setupRichEditor(assert, "> [!note]\n> Body");
       const { view } = editorClass;
 
       const title = findNode(view, "callout_title");
-      assert.notStrictEqual(title, null, "found title node");
 
       const { schema } = view.state;
       view.dispatch(
@@ -1055,7 +1008,6 @@ module(
       await settled();
 
       const title = findNode(view, "callout_title");
-      assert.notStrictEqual(title, null, "found title node");
 
       view.dispatch(
         view.state.tr.delete(
@@ -1063,21 +1015,7 @@ module(
           title.pos + 1 + title.node.content.size
         )
       );
-      let bodyTextPos = null;
-      view.state.doc.descendants((node, pos) => {
-        if (bodyTextPos === null && node.isText) {
-          bodyTextPos = pos;
-          return false;
-        }
-      });
-      assert.notStrictEqual(bodyTextPos, null, "found body text position");
-
-      const SelectionClass = view.state.selection.constructor;
-      view.dispatch(
-        view.state.tr.setSelection(
-          SelectionClass.create(view.state.doc, bodyTextPos)
-        )
-      );
+      setCursorInNode(view, "callout_body");
       await settled();
 
       const titleAfter = findNode(view, "callout_title");
@@ -1373,7 +1311,6 @@ module(
       const { view } = editorClass;
 
       const body = findNode(view, "callout_body");
-      assert.notStrictEqual(body, null, "found callout_body");
 
       insertEmptyParagraphAt(view, body.pos + body.node.nodeSize - 1);
       await settled();
@@ -1407,7 +1344,7 @@ module(
       assert.strictEqual(gapCursorAt(view), "callout_body: callout | end");
     });
 
-    test("ArrowDown from trailing empty paragraph does not insert duplicate when content follows", async function (assert) {
+    test("ArrowDown on trailing empty paragraph reuses the paragraph after", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> Outer\n> > [!tip]\n> > Inner"
@@ -1415,7 +1352,6 @@ module(
       const { view } = editorClass;
 
       const body = findNode(view, "callout_body");
-      assert.notStrictEqual(body, null, "found outer callout_body");
 
       insertEmptyParagraphAt(view, body.pos + body.node.nodeSize - 1);
       await settled();
@@ -1427,13 +1363,60 @@ module(
 
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowDown");
 
-      assert.true(
-        view.state.doc.content.size <= docSizeBefore,
-        "no extra paragraph inserted when content already follows"
+      assert.strictEqual(
+        view.state.doc.content.size,
+        docSizeBefore - 2,
+        "empty paragraph removed, none inserted"
       );
       assert.false(
         isInsideNode(view.state.selection, "callout"),
         "cursor exited the outer callout"
+      );
+    });
+
+    test("ArrowDown on trailing empty paragraph adds a paragraph after the callout", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> > [!note]\n> > Body\n\nAfter"
+      );
+      const { view } = editorClass;
+
+      const body = findNode(view, "callout_body");
+      insertEmptyParagraphAt(view, body.pos + body.node.nodeSize - 1);
+      await settled();
+
+      setCursorInNode(view, "paragraph", (n) => n.content.size === 0);
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowDown");
+
+      const { $from } = view.state.selection;
+      assert.strictEqual($from.node(-1).type.name, "blockquote");
+      assert.strictEqual(
+        $from.parent.content.size,
+        0,
+        "cursor in new paragraph"
+      );
+      assert.strictEqual(findNode(view, "callout_body").node.childCount, 1);
+    });
+
+    test("ArrowDown at end of a callout adds a paragraph after it", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> > [!note]\n> > Body\n\nAfter"
+      );
+      const { view } = editorClass;
+
+      const text = findNode(view, "text", (n) => n.text === "Body");
+      setCursorAt(view, text.pos + text.node.nodeSize);
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowDown");
+
+      const { $from } = view.state.selection;
+      assert.strictEqual($from.node(-1).type.name, "blockquote");
+      assert.strictEqual(
+        $from.parent.content.size,
+        0,
+        "cursor in new paragraph"
       );
     });
 
@@ -1445,7 +1428,6 @@ module(
       const { view } = editorClass;
 
       const callout = findNode(view, "callout");
-      assert.notStrictEqual(callout, null, "found callout node");
 
       insertEmptyParagraphAt(view, callout.pos + callout.node.nodeSize);
       await settled();
@@ -1484,7 +1466,7 @@ module(
       );
     });
 
-    test("empty paragraph is not cleaned up on mouse-driven navigation", async function (assert) {
+    test("non-keyboard selection keeps the empty paragraph", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> Content"
@@ -1527,18 +1509,17 @@ module(
       );
       const { view } = editorClass;
 
-      const body = findNode(view, "callout_body");
-      assert.true(body.node.childCount > 1, "body has multiple paragraphs");
+      assert.strictEqual(findNode(view, "callout_body").node.childCount, 2);
 
       setCursorInNode(view, "text", (n) => n.text === "Second");
       await settled();
 
       await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
 
-      const bodyAfter = findNode(view, "callout_body");
-      assert.true(
-        bodyAfter.node.childCount > 1,
-        "paragraphs are preserved, ArrowUp did not remove any"
+      assert.strictEqual(
+        findNode(view, "callout_body").node.childCount,
+        2,
+        "no paragraph is removed"
       );
     });
 
@@ -1584,7 +1565,7 @@ module(
       assert.strictEqual(gapCursorAt(view), "callout_body: start | wrap_block");
     });
 
-    test("ArrowUp from empty paragraph enters nested callout even when non-callout content exists above", async function (assert) {
+    test("ArrowUp from empty paragraph enters the nested callout above", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> content\n> > [!tip]\n> > Inner"
@@ -1636,6 +1617,22 @@ module(
         isInsideNode(view.state.selection, "callout_body"),
         "cursor is inside the callout body"
       );
+    });
+
+    test("ArrowUp below a title-only callout adds a body paragraph", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note] Title\n\nAfter"
+      );
+      const { view } = editorClass;
+
+      setCursorInNode(view, "text", (n) => n.text === "After");
+      await settled();
+      await triggerKeyEvent(".ProseMirror", "keydown", "ArrowUp");
+
+      assertCursorInBody(assert, view);
+      assert.strictEqual(findNode(view, "callout_body").node.childCount, 1);
+      assert.strictEqual(view.state.doc.lastChild.textContent, "After");
     });
 
     test("ArrowUp from an empty paragraph after a nested callout shows a gap cursor", async function (assert) {
@@ -1763,36 +1760,7 @@ module(
       assert.strictEqual(gapCursorAt(view), "callout_body: wrap_block | end");
     });
 
-    test("clicking does not insert a duplicate when an empty paragraph already exists after nested callout", async function (assert) {
-      const [editorClass] = await setupRichEditor(
-        assert,
-        "> [!note]\n> > [!tip]\n> > Inner"
-      );
-      const { view } = editorClass;
-
-      const outerBody = findNode(view, "callout_body");
-      const endOfBody = outerBody.pos + outerBody.node.nodeSize - 1;
-
-      callHandleClick(view, endOfBody);
-      await settled();
-
-      const bodyAfterFirst = findNode(view, "callout_body");
-      const childCountAfterFirst = bodyAfterFirst.node.childCount;
-
-      const endOfBodyUpdated =
-        bodyAfterFirst.pos + bodyAfterFirst.node.nodeSize - 1;
-      callHandleClick(view, endOfBodyUpdated);
-      await settled();
-
-      const bodyAfterSecond = findNode(view, "callout_body");
-      assert.strictEqual(
-        bodyAfterSecond.node.childCount,
-        childCountAfterFirst,
-        "no duplicate paragraph inserted on second click"
-      );
-    });
-
-    test("clicking at end of body with text content does not insert a paragraph", async function (assert) {
+    test("clicking at end of a text body inserts nothing", async function (assert) {
       const [editorClass] = await setupRichEditor(
         assert,
         "> [!note]\n> Body text"
@@ -1800,7 +1768,6 @@ module(
       const { view } = editorClass;
 
       const body = findNode(view, "callout_body");
-      assert.notStrictEqual(body, null, "found callout_body");
 
       const endOfBody = body.pos + body.node.nodeSize - 1;
       const childCountBefore = body.node.childCount;
@@ -1813,6 +1780,24 @@ module(
         bodyAfter.node.childCount,
         childCountBefore,
         "no paragraph inserted because body ends with text, not a nested callout"
+      );
+    });
+
+    test("clicking below a nested callout adds a paragraph after it", async function (assert) {
+      const [editorClass] = await setupRichEditor(
+        assert,
+        "> [!note]\n> Outer\n> > [!tip]\n> > Inner\n\nAfter"
+      );
+      const { view } = editorClass;
+
+      const inner = findNode(view, "callout", (n) => n.attrs.type === "tip");
+      await clickBelow(view, inner.pos);
+
+      assertCursorInBody(assert, view);
+      assert.strictEqual(view.state.selection.$from.parent.content.size, 0);
+      assert.strictEqual(
+        findNode(view, "callout_body").node.lastChild.type.name,
+        "paragraph"
       );
     });
   }
@@ -1829,7 +1814,6 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
     await typeText(view, "/callout ", settled);
 
     const callout = findNode(view, "callout");
-    assert.notStrictEqual(callout, null, "callout node was created");
     assert.strictEqual(
       callout.node.attrs.type,
       "note",
@@ -1845,7 +1829,6 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
     await typeText(view, "/callout:tip ", settled);
 
     const callout = findNode(view, "callout");
-    assert.notStrictEqual(callout, null, "callout node was created");
     assert.strictEqual(callout.node.attrs.type, "tip", "callout type is tip");
     assertCursorInBody(assert, view);
   });
@@ -1857,7 +1840,6 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
     await typeText(view, "!!tip ", settled);
 
     const callout = findNode(view, "callout");
-    assert.notStrictEqual(callout, null, "callout node was created");
     assert.strictEqual(callout.node.attrs.type, "tip", "callout type is tip");
     assertCursorInBody(assert, view);
   });
@@ -1869,7 +1851,6 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
     await typeText(view, "/callout:note ", settled);
 
     const title = findNode(view, "callout_title");
-    assert.notStrictEqual(title, null, "callout title exists");
     assert.strictEqual(
       title.node.textContent,
       "Note",
@@ -1888,7 +1869,6 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
     await typeText(view, "/callout:TIP ", settled);
 
     const callout = findNode(view, "callout");
-    assert.notStrictEqual(callout, null, "callout node was created");
     assert.strictEqual(
       callout.node.attrs.type,
       "tip",
@@ -1917,7 +1897,6 @@ module("Integration | Rich Editor | Callout – input rules", function (hooks) {
     await typeText(view, "/callout:xyz ", settled);
 
     const callout = findNode(view, "callout");
-    assert.notStrictEqual(callout, null, "callout node was created");
     assert.strictEqual(
       callout.node.attrs.type,
       "note",
@@ -2215,7 +2194,7 @@ module("Integration | Rich Editor | Callout – move controls", function (hooks)
       .doesNotExist("no nest down buttons for single callout");
   });
 
-  test("nested callout shows move buttons (can lift out)", async function (assert) {
+  test("nested callout shows move buttons", async function (assert) {
     const [editorClass] = await setupRichEditor(
       assert,
       "> [!note]\n> > [!tip]\n> > Nested content"

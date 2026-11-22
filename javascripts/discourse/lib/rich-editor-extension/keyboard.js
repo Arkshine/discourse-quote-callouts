@@ -199,51 +199,7 @@ export function handleArrowUp({
     $from.parent.type === schema.nodes.paragraph &&
     $from.parent.content.size === 0;
 
-  // From an empty paragraph right after the callout:
-  // move back into the nested callout body.
-  //
-  //   Before                   After (↑)
-  //   ┌─ callout ────────┐     ┌─ callout ────────┐
-  //   │  ┌─ nested ────┐ │     │  ┌─ nested ────┐ │
-  //   │  │  Content    │ │     │  │  Content    │ │
-  //   │  └─────────────┘ │     │  │  |          │ │
-  //   │  |               │     │  └─────────────┘ │
-  //   └──────────────────┘     └──────────────────┘
   if (isEmptyParagraph) {
-    const parentNode = $from.node($from.depth - 1);
-    const index = $from.index($from.depth - 1);
-
-    if (index > 0) {
-      const prevNode = parentNode.child(index - 1);
-
-      if (prevNode.type === schema.nodes.callout) {
-        const tr = state.tr.delete(
-          $from.before($from.depth),
-          $from.after($from.depth)
-        );
-
-        const prevCalloutBody = prevNode.child(1);
-        const lastBodyChild = prevCalloutBody.lastChild;
-        const hasTrailingEmpty =
-          lastBodyChild?.type === schema.nodes.paragraph &&
-          lastBodyChild.content.size === 0;
-
-        const bodyEndPos = $from.before($from.depth) - 2;
-
-        if (hasTrailingEmpty) {
-          tr.setMeta("callout:keyboardNav", true);
-          tr.setSelection(TextSelection.create(tr.doc, bodyEndPos));
-        } else {
-          tr.insert(bodyEndPos, schema.nodes.paragraph.create());
-          tr.setMeta("callout:keyboardNav", true);
-          tr.setSelection(TextSelection.create(tr.doc, bodyEndPos + 1));
-        }
-
-        dispatch(tr.scrollIntoView());
-        return true;
-      }
-    }
-
     // From the only empty paragraph in a callout body, move up to the title
     // and remove the paragraph. This is the reverse of ArrowDown/Enter from
     // the title which inserted it.

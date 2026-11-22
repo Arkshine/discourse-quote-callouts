@@ -44,6 +44,7 @@ acceptance("Callouts Theme Component - Topic quotes", function (needs) {
       .dom("#post_1 aside.quote .callout[data-callout-type='tip']")
       .exists();
     assert.dom("#post_1 aside.quote .callout-title").hasText("Title");
+    assert.dom("#post_1 .callout-chooser-trigger").doesNotExist();
   });
 
   test("marker is stripped from topic onebox in a post", async function (assert) {
