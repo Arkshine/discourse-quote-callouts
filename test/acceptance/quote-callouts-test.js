@@ -143,7 +143,7 @@ const FIXTURES = {
   `),
 
   CALLOUT_CASE_INSENSITIVE: dedent(`
-    > [!Note]
+    > [!Warning]
   `),
 
   CALLOUT_WITH_EMOJI: dedent(`
@@ -415,7 +415,7 @@ acceptance("Callouts Theme Component", function (needs) {
       .exists("Second callout type is correct");
   });
 
-  test("callout with custom title", async function (assert) {
+  test("callout uses title from settings", async function (assert) {
     await visitAndCreate(FIXTURES.CUSTOM_TITLE_CALLOUT);
 
     assert
@@ -446,13 +446,13 @@ acceptance("Callouts Theme Component", function (needs) {
       .doesNotExist("Fold icon is not shown for empty callout");
   });
 
-  test("invalid callout format", async function (assert) {
+  test("second marker in one quote stays content", async function (assert) {
     await visitAndCreate(FIXTURES.INVALID_CALLOUT_FORMAT);
 
     assert.dom(".callout").exists({ count: 1 }, "Only one callout is rendered");
   });
 
-  test("callout with multiple aliases", async function (assert) {
+  test("tip alias uses the tip title and icon", async function (assert) {
     await visitAndCreate(FIXTURES.ALIASED_TIP);
 
     assert
@@ -641,13 +641,13 @@ acceptance("Callouts Theme Component", function (needs) {
       .includesText("Content with BBCode title", "Content is correct");
   });
 
-  test("callout with insensitive case", async function (assert) {
-    await visitAndCreate(FIXTURES.CALLOUT_WITH_BBCODE_TITLE);
+  test("callout type is case-insensitive", async function (assert) {
+    await visitAndCreate(FIXTURES.CALLOUT_CASE_INSENSITIVE);
 
-    assert.dom(".callout").exists("Callout is rendered");
+    assert.dom(".callout[data-callout-type='warning']").exists();
   });
 
-  test("callout content emptiness", async function (assert) {
+  test("emoji-only content is kept", async function (assert) {
     await visitAndCreate(FIXTURES.CALLOUT_WITH_EMOJI);
 
     assert
@@ -1026,7 +1026,7 @@ acceptance("Callouts Theme Component", function (needs) {
     );
   });
 
-  test("escapedExcerpt returns null when excerpt is not set", function (assert) {
+  test("escapedExcerpt is undefined without an excerpt", function (assert) {
     const store = this.owner.lookup("service:store");
     const topic = store.createRecord("topic", { pinned: true });
 
@@ -1082,18 +1082,6 @@ acceptance("Callouts Theme Component", function (needs) {
     );
   });
 
-  test("callout chooser is not shown for rendered posts", async function (assert) {
-    await visitAndCreate(FIXTURES.BASIC_CALLOUT);
-
-    assert
-      .dom(".d-editor-preview .callout-chooser-trigger")
-      .exists("Chooser appears in preview");
-
-    assert
-      .dom(".d-editor-preview .callout-chooser-trigger")
-      .exists({ count: 1 }, "Only one chooser trigger for one callout");
-  });
-
   test("callout chooser panel search filters the list", async function (assert) {
     await visitAndCreate(FIXTURES.BASIC_CALLOUT);
 
@@ -1133,6 +1121,10 @@ acceptance("Callouts Theme Component", function (needs) {
     assert
       .dom(".callout-chooser-row")
       .doesNotExist("Chooser is closed after selection");
+    assert.true(
+      document.querySelector(".d-editor-input").value.includes("[!warning]"),
+      "the row after the current type is selected"
+    );
   });
 
   test("callout chooser panel highlights current type as selected", async function (assert) {

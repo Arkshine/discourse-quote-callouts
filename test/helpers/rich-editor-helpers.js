@@ -1,7 +1,5 @@
-/**
- * Finds the first node matching `nodeTypeName` (and optional predicate)
- * in the document.
- */
+import { triggerEvent } from "@ember/test-helpers";
+
 export function findNode(view, nodeTypeName, predicate) {
   let found = null;
   view.state.doc.descendants((node, pos, parent) => {
@@ -15,10 +13,6 @@ export function findNode(view, nodeTypeName, predicate) {
   return found;
 }
 
-/**
- * Places the cursor at the first content position inside the first
- * node of `nodeTypeName`.
- */
 export function setCursorInNode(view, nodeTypeName, predicate = null) {
   const result = findNode(view, nodeTypeName, predicate);
   if (!result) {
@@ -32,22 +26,14 @@ export function setCursorInNode(view, nodeTypeName, predicate = null) {
   return result.pos;
 }
 
-/**
- * Places the cursor at an exact document position.
- */
 export function setCursorAt(view, pos) {
-  const $pos = view.state.doc.resolve(pos);
   view.dispatch(
     view.state.tr.setSelection(
-      view.state.selection.constructor.create(view.state.doc, $pos)
+      view.state.selection.constructor.create(view.state.doc, pos)
     )
   );
 }
 
-/**
- * Walks upward from `selection.$from` and returns `true` if any
- * ancestor has the given type name.
- */
 export function isInsideNode(selection, nodeTypeName) {
   const { $from } = selection;
   for (let d = $from.depth; d >= 0; d--) {
@@ -58,9 +44,6 @@ export function isInsideNode(selection, nodeTypeName) {
   return false;
 }
 
-/**
- * Asserts that the cursor is inside a paragraph within a callout body.
- */
 export function assertCursorInBody(
   assert,
   view,
@@ -74,17 +57,12 @@ export function assertCursorInBody(
   assert.true(isInsideNode(view.state.selection, "callout_body"), message);
 }
 
-/**
- * Inserts an empty paragraph at the given document position.
- */
 export function insertEmptyParagraphAt(view, pos) {
   const { schema } = view.state;
   view.dispatch(view.state.tr.insert(pos, schema.nodes.paragraph.create()));
 }
 
-/**
- * Directly invokes the `handleClick` plugin prop at the given position.
- */
+// No coordinates, so prosemirror-gapcursor's handleClick runs first.
 export function callHandleClick(view, pos) {
   const event = new MouseEvent("click");
   for (const plugin of view.state.plugins) {
@@ -95,10 +73,18 @@ export function callHandleClick(view, pos) {
   return false;
 }
 
-/**
- * Simulates typing text character by character into the ProseMirror editor,
- * triggering input rules via `handleTextInput`.
- */
+// Real click just below the node at `pos`, so ProseMirror resolves coordinates.
+export async function clickBelow(view, pos) {
+  const dom = view.nodeDOM(pos);
+  dom.scrollIntoView({ block: "center" });
+  const rect = dom.getBoundingClientRect();
+  const opts = { clientX: rect.left + 20, clientY: rect.bottom + 1 };
+  const target = document.elementFromPoint(opts.clientX, opts.clientY);
+  await triggerEvent(target, "mousedown", opts);
+  await triggerEvent(target, "mouseup", opts);
+}
+
+// Goes through handleTextInput so input rules fire.
 export async function typeText(view, text, settled) {
   for (const char of text) {
     const { from, to } = view.state.selection;
@@ -114,10 +100,7 @@ export async function typeText(view, text, settled) {
   }
 }
 
-/**
- * Describes the gap cursor as "parent: before | after", or null if the
- * selection is not a gap cursor.
- */
+// "parent: before | after", or null when not a gap cursor.
 export function gapCursorAt(view) {
   const { selection } = view.state;
   if (selection.toJSON().type !== "gapcursor") {
